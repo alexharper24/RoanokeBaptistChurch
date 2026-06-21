@@ -264,7 +264,7 @@ a { color: inherit; }
 .torch-give .zelle { font-weight: 700; color: var(--brand); font-size: 1.05rem; }
 
 /* Ministries grid */
-.min-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.min-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .min-card { background: var(--white); border: 1px solid #ece7dd; border-radius: 12px; overflow: hidden; }
 .min-card .icon-square { margin: 24px 24px 0; }
 .min-iconband { height: 175px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--warm-gray) 0%, #efe1dc 100%); border-bottom: 1px solid #ece7dd; }
@@ -302,7 +302,7 @@ a { color: inherit; }
   .two-col, .sched-grid, .visit-grid, .pastor-grid, .focus-banner, .torch-grid { grid-template-columns: 1fr; }
   .focus-banner .focus-img { min-height: 220px; }
   .staff-grid { grid-template-columns: repeat(2, 1fr); }
-  .min-grid { grid-template-columns: 1fr; }
+  .min-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-photo, .gallery-photo.big { grid-column: 1 / -1; height: 220px; }
   .hero { padding: 32px 18px 40px; }
@@ -314,6 +314,7 @@ a { color: inherit; }
 
 @media (max-width: 560px) {
   .staff-grid { grid-template-columns: 1fr; }
+  .min-grid { grid-template-columns: 1fr; }
   .names-cols { columns: 1; }
 }
 
