@@ -23,7 +23,7 @@ img { max-width: 100%; display: block; }
 a { color: inherit; }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-.section { padding: 56px 0; background: var(--white); }
+.section { padding: 44px 0; background: var(--white); }
 .section-alt { background: var(--cream); }
 .section-header { text-align: center; margin-bottom: 36px; }
 .section-label { color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; }
@@ -170,19 +170,20 @@ a { color: inherit; }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 20px; text-align: center; font-size: 0.85rem; color: #909090; }
 
 /* Page banner (interior pages) */
-.page-banner { background: var(--navy); color: #fff; text-align: center; padding: 56px 24px; }
+.page-banner { background: var(--navy); color: #fff; text-align: center; padding: 40px 24px; }
 .page-banner .section-label { color: var(--gold-light); }
 .page-banner h1 { color: #fff; font-size: 2.4rem; }
 
 /* Beliefs / gospel cards */
-.belief-section { background: var(--white); border: 1px solid #ece7dd; border-radius: 12px; padding: 26px; margin-bottom: 20px; }
-.belief-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.belief-section { background: var(--white); border: 1px solid #ece7dd; border-radius: 12px; padding: 22px; margin-bottom: 16px; }
+.belief-head { display: flex; align-items: center; gap: 10px 14px; margin-bottom: 12px; flex-wrap: wrap; }
 .icon-square { width: 44px; height: 44px; border-radius: 9px; background: var(--navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .icon-square svg { width: 24px; height: 24px; color: #fff; }
 .icon-square.red { background: #b23a31; }
 .icon-square.gray { background: #5a5a5a; }
 .icon-square.green { background: #2f8f5b; }
 .belief-head h3 { font-size: 1.3rem; border-bottom: 2px solid var(--gold); padding-bottom: 4px; }
+.head-label { color: var(--gold); font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.08em; }
 .belief-section p { color: var(--text-light); margin-bottom: 12px; }
 .scripture { display: inline-block; background: var(--warm-gray); color: var(--navy); border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px 6px 4px 0; cursor: pointer; transition: all 0.2s; border: 1px solid #e2dcce; }
 .scripture:hover { background: var(--gold); color: var(--navy); }
@@ -199,11 +200,11 @@ a { color: inherit; }
 
 /* Statement of Faith */
 .sof-list { max-width: 860px; margin: 0 auto; }
-.sof-item { background: var(--white); border: 1px solid #e7ded0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.07); overflow: hidden; }
+.sof-item { background: var(--white); border: 1px solid #ece7dd; border-radius: 12px; padding: 22px; margin-bottom: 16px; }
 .sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--gold); }
 .sof-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 700; font-size: 1.02rem; border: 2px solid var(--gold-light); }
 .sof-head h3 { color: #fff; font-size: 1.2rem; margin: 0; line-height: 1.25; }
-.sof-body { padding: 22px 24px 24px; }
+.sof-body { padding: 0; }
 .sof-body p { color: var(--text); margin-bottom: 10px; }
 .sof-refs { color: var(--brand) !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em; }
 .sof-refs-row { margin-top: 10px; }
@@ -298,7 +299,7 @@ a { color: inherit; }
 @media (max-width: 900px) {
   .nav-desktop { display: none; }
   .hamburger { display: block; }
-  .two-col, .sched-grid, .visit-grid, .pastor-grid, .focus-banner { grid-template-columns: 1fr; }
+  .two-col, .sched-grid, .visit-grid, .pastor-grid, .focus-banner, .torch-grid { grid-template-columns: 1fr; }
   .focus-banner .focus-img { min-height: 220px; }
   .staff-grid { grid-template-columns: repeat(2, 1fr); }
   .min-grid { grid-template-columns: 1fr; }
@@ -306,13 +307,14 @@ a { color: inherit; }
   .gallery-photo, .gallery-photo.big { grid-column: 1 / -1; height: 220px; }
   .hero { padding: 32px 18px 40px; }
   .hero-content p { font-size: 1.02rem; }
-  .section { padding: 40px 0; }
+  .section { padding: 34px 0; }
   .pastor-photo { max-width: 360px; margin: 0 auto; }
   .footer-grid { grid-template-columns: 1fr; gap: 24px; }
 }
 
 @media (max-width: 560px) {
   .staff-grid { grid-template-columns: 1fr; }
+  .names-cols { columns: 1; }
 }
 
 @media (prefers-color-scheme: dark) {

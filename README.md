@@ -6,6 +6,7 @@ A real multi-page website, optimized so the church can be found on Google. Each 
 
 ```
 index.html         Home
+our-church.html    Our Church (pastor, staff, and Life at Roanoke)
 beliefs.html       What We Believe (Statement of Faith)
 gospel.html        The Gospel
 ministries.html    Ministries
