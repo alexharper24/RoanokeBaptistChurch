@@ -135,7 +135,7 @@ a { color: inherit; }
 .staff-card { background: var(--white); border: 1px solid #ece7dd; border-radius: 12px; overflow: hidden; }
 .staff-card .placeholder-photo { min-height: 200px; border: none; border-bottom: 1px solid #ece7dd; border-radius: 0; }
 .staff-card .staff-body { padding: 16px 18px; }
-.staff-photo { width: 100%; height: 205px; object-fit: cover; object-position: center 20%; display: block; border-bottom: 1px solid #ece7dd; }
+.staff-photo { width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; object-position: center; display: block; border-bottom: 1px solid #ece7dd; }
 .pastor-photo img.pastor-pic { width: 100%; height: auto; display: block; border-radius: 12px; }
 .min-photo { width: 100%; height: 175px; object-fit: cover; object-position: center 30%; display: block; border-bottom: 1px solid #ece7dd; }
 .gallery-photo { width: 100%; height: 232px; object-fit: cover; object-position: center 32%; display: block; border-radius: 12px; grid-column: span 2; }
