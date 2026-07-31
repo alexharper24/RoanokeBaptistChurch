@@ -1,0 +1,19 @@
+name: Site checks
+
+# Static checks for this hand-written site: images referenced but never
+# committed, missing ?v= cache-busters, the iOS light-mode lock, em dashes in
+# copy, dropped @media blocks, sitemap coverage, and nav drift across the
+# copy-pasted shared shell.
+#
+# The checker lives in one place so a fix improves every site at once:
+# https://github.com/alexharper24/site-checks
+#
+# Errors fail the build. Warnings are reported in the run summary only.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    uses: alexharper24/site-checks/.github/workflows/site-checks.yml@main
