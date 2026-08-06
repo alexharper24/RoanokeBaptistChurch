@@ -26,7 +26,7 @@ a { color: inherit; }
 .section { padding: 44px 0; background: var(--white); }
 .section-alt { background: var(--cream); }
 .section-header { text-align: center; margin-bottom: 36px; }
-.section-label { color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; }
+.section-label { color: #896e32; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; }
 .section-header h2 { font-size: 2rem; }
 .section-header h2 span.underline { border-bottom: 3px solid var(--gold); padding-bottom: 4px; }
 
@@ -49,7 +49,7 @@ a { color: inherit; }
 .brand-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-text .name { font-family: 'Lora', serif; font-weight: 700; color: var(--navy); font-size: 1.12rem; }
-.brand-text .tag { font-size: 0.72rem; color: var(--gold); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.brand-text .tag { font-size: 0.72rem; color: #896e32; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .nav-desktop { display: flex; align-items: center; gap: 26px; }
 .nav-desktop a { text-decoration: none; color: var(--text); font-weight: 500; font-size: 0.98rem; transition: color 0.2s; cursor: pointer; }
 .nav-desktop a:hover { color: var(--gold); }
@@ -85,7 +85,7 @@ a { color: inherit; }
 
 /* Welcome */
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; }
-.welcome-text h2 { font-size: 2rem; margin-bottom: 8px; }
+.welcome-text h1, .welcome-text h2 { font-size: 2rem; margin-bottom: 8px; }
 .welcome-text p { margin-bottom: 14px; color: var(--text-light); }
 .welcome-text .lead { font-size: 1.15rem; color: var(--text); font-weight: 500; }
 .photo-frame { border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12); background: var(--warm-gray); }
@@ -340,3 +340,15 @@ a { color: inherit; }
 
 /* Anchor offset so the sticky header does not cover linked sections */
 #about, #visit { scroll-margin-top: 90px; }
+
+
+/* --------------------------------------------------------------------------
+   Footer link tap targets (added 2026-08-06 after a rendered audit).
+   Footer links measured 17-36px tall against the 44px minimum that both Apple
+   and Google publish, so a fingertip overlapped the neighbouring link. Padding
+   only: the text size is unchanged, and this is scoped to phones so desktop
+   footer density stays exactly as it was.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  footer .footer-grid a, footer .footer-brand a { padding-top: 11px; padding-bottom: 11px; }
+}
