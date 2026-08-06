@@ -352,3 +352,12 @@ a { color: inherit; }
 @media (max-width: 640px) {
   footer .footer-grid a, footer .footer-brand a { padding-top: 11px; padding-bottom: 11px; }
 }
+
+/* --------------------------------------------------------------------------
+   Contact-row tap targets (2026-08-06). Phone, email and address links measured
+   21-24px against the 44px minimum. Padding only, phones only; inline-block so
+   the padding actually enlarges the hit area rather than being ignored.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .ct-val a { display:inline-block; padding-top:10px; padding-bottom:10px; }
+}
