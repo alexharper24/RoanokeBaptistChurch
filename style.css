@@ -8,6 +8,11 @@
   --navy-light: #b23a31;  /* crimson - action button hover */
   --gold: #c9a24a;        /* antique gold accent - complements crimson */
   --gold-light: #e2c47b;
+  /* Accessible gold for TEXT on light grounds. --gold is 2.40:1 on white,
+     under the 4.5:1 WCAG AA minimum. This clears white and the warm tint
+     (4.84 / 4.51). Use --gold for fills, rules, icons and anything on the
+     dark grounds, where it already passes. */
+  --gold-ink: #896e32;
   --teal: #1f6f62;        /* true complement of the red, used sparingly */
   --cream: #fbf6f4;       /* warm off-white */
   --warm-gray: #f4ebe9;   /* warm rose-gray */
@@ -127,7 +132,7 @@ a { color: inherit; }
 .pastor-photo { border-radius: 12px; overflow: hidden; }
 .pastor-photo .placeholder-photo { min-height: 360px; }
 .pastor-bio h3 { font-size: 1.7rem; margin-bottom: 4px; }
-.pastor-bio .role { color: var(--gold); font-weight: 600; margin-bottom: 16px; }
+.pastor-bio .role { color: var(--gold-ink); font-weight: 600; margin-bottom: 16px; }
 .pastor-bio p { color: var(--text-light); margin-bottom: 12px; }
 
 /* Staff cards */
@@ -141,7 +146,7 @@ a { color: inherit; }
 .gallery-photo { width: 100%; height: 232px; object-fit: cover; object-position: center 32%; display: block; border-radius: 12px; grid-column: span 2; }
 .gallery-photo.big { grid-column: span 3; height: 300px; }
 .staff-card h4 { font-size: 1.1rem; }
-.staff-card .role { color: var(--gold); font-weight: 600; font-size: 0.88rem; margin-bottom: 8px; }
+.staff-card .role { color: var(--gold-ink); font-weight: 600; font-size: 0.88rem; margin-bottom: 8px; }
 .staff-card p { font-size: 0.9rem; color: var(--text-light); }
 
 /* Visit + contact */
@@ -159,7 +164,7 @@ a { color: inherit; }
 /* Footer */
 .site-footer { background: var(--navy-dark); color: #cfcfcf; padding: 48px 0 24px; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; margin-bottom: 32px; }
-.footer-grid h4 { color: #fff; margin-bottom: 14px; font-size: 1.1rem; }
+.footer-grid h3, .footer-grid h4 { color: #fff; margin-bottom: 14px; font-size: 1.1rem; }
 .footer-brand .name { font-family: 'Lora', serif; color: #fff; font-size: 1.3rem; font-weight: 700; }
 .footer-logo { width: 72px; height: 72px; border-radius: 50%; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 .footer-brand .tag { color: var(--gold); font-weight: 600; margin-bottom: 12px; }
