@@ -145,6 +145,7 @@ a { color: inherit; }
 .min-photo { width: 100%; height: 175px; object-fit: cover; object-position: center 30%; display: block; border-bottom: 1px solid #ece7dd; }
 .gallery-photo { width: 100%; height: 232px; object-fit: cover; object-position: center 32%; display: block; border-radius: 12px; grid-column: span 2; }
 .gallery-photo.big { grid-column: span 3; height: 300px; }
+.gallery-photo.wide { grid-column: 1 / -1; height: 380px; }
 .staff-card h4 { font-size: 1.1rem; }
 .staff-card .role { color: var(--gold-ink); font-weight: 600; font-size: 0.88rem; margin-bottom: 8px; }
 .staff-card p { font-size: 0.9rem; color: var(--text-light); }
@@ -312,7 +313,7 @@ a { color: inherit; }
   .staff-grid { grid-template-columns: repeat(2, 1fr); }
   .min-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid { grid-template-columns: 1fr; }
-  .gallery-photo, .gallery-photo.big { grid-column: 1 / -1; height: 220px; }
+  .gallery-photo, .gallery-photo.big, .gallery-photo.wide { grid-column: 1 / -1; height: 220px; }
   .hero { padding: 32px 18px 40px; }
   .hero-content p { font-size: 1.02rem; }
   .section { padding: 34px 0; }

@@ -70,6 +70,7 @@ To change wording or swap a photo, edit the file and re-upload it. Because styli
 - The **Give** button opens a simple on-page note with the Zelle address. A static site can't process payments directly; if you want a real online-giving button later, link out to a provider.
 - Three ministry cards (Children, Wednesday Kids' Clubs, Ladies' Fellowship) and the Missions card use an icon instead of a photo, and the Bus Ministry card currently shows a family portrait rather than a bus. Send real photos and I'll drop them in.
 - The welcome/building photo is low-resolution; a higher-resolution original would sharpen it.
+- The choir photo leads the "Life At Roanoke Baptist" gallery on **Our Church**, and the "Boldly Go!" flag display anchors a missions banner at the bottom of **Ministries**. Full-size originals are kept in `img/archive/`; the web copies in `img/` are resized to 1200px wide.
 
 ## Security
 
