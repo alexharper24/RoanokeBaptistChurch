@@ -100,6 +100,8 @@
     (c.rows || []).forEach(function (r) { rows.appendChild(eventRow(r)); });
     box.querySelector('.add-row').onclick = function () { rows.appendChild(eventRow()); markDirty(); };
     box.dataset.image = c.image || '';
+    if (c.image_w) box.dataset.imageW = c.image_w;
+    if (c.image_h) box.dataset.imageH = c.image_h;
     if (c.image) {
       var pv = box.querySelector('.ipreview');
       pv.src = /^img\//.test(c.image) ? '/' + c.image : '/api/admin/file/' + encodeURIComponent(c.image);
@@ -116,11 +118,17 @@
         .then(function (r) {
           box.dataset.image = r.key;
           var pv = box.querySelector('.ipreview');
+          // The renderer needs the real dimensions to work out how tall this
+          // card will be, which is what keeps the two columns level.
+          pv.onload = function () {
+            box.dataset.imageW = pv.naturalWidth;
+            box.dataset.imageH = pv.naturalHeight;
+            schedulePreview();
+          };
           pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
           pv.hidden = false;
           status.textContent = 'Added.';
           markDirty();
-          schedulePreview();
         })
         .catch(function (e) { status.textContent = e.message; });
     };
@@ -138,6 +146,8 @@
         body: box.querySelector('.b').value.trim(),
         rows: readRows(box.querySelector('.rows')),
         image: box.dataset.image || null,
+        image_w: box.dataset.imageW ? Number(box.dataset.imageW) : null,
+        image_h: box.dataset.imageH ? Number(box.dataset.imageH) : null,
       };
     }).filter(function (c) { return c.heading || c.body || c.rows.length; });
   }
@@ -442,7 +452,7 @@ function upload(file, kind, slot) {
       doc.open();
       doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="stylesheet" href="/style.css?v=9"></head>' +
+        '<link rel="stylesheet" href="/style.css?v=10"></head>' +
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();
@@ -467,6 +477,17 @@ function upload(file, kind, slot) {
   };
   $('previewLive').onchange = function () { if (this.checked) renderPreview(); };
   $('previewRefresh').onclick = function () { renderPreview(); };
+
+  // Desktop / phone. Without this the preview is stuck below the site's 900px
+  // breakpoint and always shows the single-column phone layout.
+  function setWidth(phone) {
+    $('frameWrap').className = 'frame-wrap' + (phone ? ' phone' : '');
+    $('previewPhone').classList.toggle('active', phone);
+    $('previewDesktop').classList.toggle('active', !phone);
+    renderPreview();
+  }
+  $('previewDesktop').onclick = function () { setWidth(false); };
+  $('previewPhone').onclick = function () { setWidth(true); };
 
   // Typing, picking a colour, adding or removing a row all feed the preview.
   document.addEventListener('input', schedulePreview);

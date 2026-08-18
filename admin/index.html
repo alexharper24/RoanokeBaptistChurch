@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>The Torch, Editor | Roanoke Baptist Church</title>
   <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/admin/admin.css?v=4">
+  <link rel="stylesheet" href="/admin/admin.css?v=5">
 </head>
 <body>
 
@@ -162,15 +162,19 @@
     </div>
   </section>
 
-  <section class="panel" id="previewPanel" hidden>
+  <section class="panel wide" id="previewPanel" hidden>
     <div class="preview-head">
       <h2>Preview</h2>
       <label class="live"><input type="checkbox" id="previewLive" checked> Update as I type</label>
+      <span class="widths">
+        <button type="button" class="btn btn-x active" id="previewDesktop">Desktop</button>
+        <button type="button" class="btn btn-x" id="previewPhone">Phone</button>
+      </span>
       <button type="button" class="btn btn-x" id="previewRefresh">Refresh now</button>
       <span id="previewNote" class="note"></span>
     </div>
     <p class="help">This is the real page, drawn by the same code the website uses. Nothing here is visible to anyone until you publish.</p>
-    <iframe id="previewFrame" title="Preview of the Torch page"></iframe>
+    <div class="frame-wrap" id="frameWrap"><iframe id="previewFrame" title="Preview of the Torch page"></iframe></div>
   </section>
 
 </main>
@@ -190,6 +194,6 @@
 </div>
 
 <script src="/admin/parse-torch.js?v=1"></script>
-<script src="/admin/admin.js?v=4"></script>
+<script src="/admin/admin.js?v=5"></script>
 </body>
 </html>

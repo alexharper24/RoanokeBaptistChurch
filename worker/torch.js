@@ -100,9 +100,20 @@ const LINE_HEIGHT = 26;    // one wrapped line of body text
 const PARA_GAP = 12;
 const IMAGE_HEIGHT = 180;  // varies 120-220 with aspect ratio; this is the middle
 
-export function estimateCardHeight(card, charsPerLine) {
+export function estimateCardHeight(card, charsPerLine, contentWidth) {
   let h = CARD_CHROME;
-  if (card.image) h += IMAGE_HEIGHT;
+  if (card.image) {
+    // An image renders at its natural width, capped by the card. Knowing its
+    // real dimensions matters: a 540px-wide graphic in a 398px column is
+    // nearly 300px tall, where a 184px one is under 170px. Guessing a single
+    // average here was the largest source of error in the column balance.
+    if (card.image_w && card.image_h) {
+      const shown = Math.min(card.image_w, contentWidth);
+      h += Math.round((shown * card.image_h) / card.image_w) + 16;
+    } else {
+      h += IMAGE_HEIGHT;
+    }
+  }
   h += (card.rows || []).length * ROW_HEIGHT;
   for (const para of (card.body || '').split(/\n{2,}/)) {
     const t = para.trim();
@@ -116,6 +127,9 @@ export function estimateCardHeight(card, charsPerLine) {
 // sentence wraps to fewer lines on the left. Measured, not guessed.
 const LEFT_CHARS = 95;
 const RIGHT_CHARS = 72;
+// Card width minus its 24px side padding.
+const LEFT_WIDTH = 532;
+const RIGHT_WIDTH = 398;
 
 // A newsletter has a handful of sections, so every possible split can simply be
 // tried. Greedy placement left a 226px gap on the August issue where the best
@@ -128,8 +142,8 @@ export function balanceColumns(cards) {
   const n = cards.length;
   if (n === 0) return { left: [], right: [], leftHeight: 0, rightHeight: 0 };
 
-  const hL = cards.map((c) => estimateCardHeight(c, LEFT_CHARS));
-  const hR = cards.map((c) => estimateCardHeight(c, RIGHT_CHARS));
+  const hL = cards.map((c) => estimateCardHeight(c, LEFT_CHARS, LEFT_WIDTH));
+  const hR = cards.map((c) => estimateCardHeight(c, RIGHT_CHARS, RIGHT_WIDTH));
 
   if (n > EXHAUSTIVE_LIMIT) {
     const left = [], right = [];
