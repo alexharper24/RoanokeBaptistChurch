@@ -24,7 +24,8 @@ worker/            Cloudflare Worker: the Torch API and page rendering
 schema.sql         Database tables for the newsletter
 seed-2026-08.sql   The August 2026 issue, as first content
 wrangler.jsonc     Cloudflare configuration
-setup.mjs          One-shot Cloudflare provisioning (npm run setup)
+setup.mjs          One-shot Cloudflare provisioning (node setup.mjs)
+verify.mjs         Post-deploy smoke test (node verify.mjs <url>)
 .assetsignore      Files that must not be published to the web
 ```
 
@@ -169,6 +170,22 @@ node node_modules/wrangler/bin/wrangler.js dev --persist-to ../.wrangler-state/r
 `--persist-to` has to point outside this folder. The site files are served from
 the repository root, so Cloudflare's local database writes would otherwise look
 like edited files and the dev server would restart in a loop.
+
+### After any deploy, check it
+
+```bash
+node verify.mjs https://roanokebaptistonline.com
+```
+
+It confirms every page answers without a redirect, the editor is locked, no
+source or config file is being served, and no member birthdays reached the
+public page. It exits non-zero if anything is wrong.
+
+This exists because the first deploy published `seed-2026-08.sql`, `setup.mjs`,
+and `.gitignore` by accident. The asset directory is the repo root, so
+`.assetsignore` is the only thing keeping a new file out of the public site, and
+the first version of it listed files by name rather than by extension. Anything
+new added to this folder is public until proven otherwise; run this and see.
 
 ### Publishing an issue
 

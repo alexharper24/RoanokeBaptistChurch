@@ -1,25 +1,54 @@
-# Everything here stays out of the edge asset bundle.
+# What must NOT be published to the web.
 #
-# The asset directory is the repo root so that GitHub Pages keeps serving the
-# site unchanged until the DNS cutover. That means wrangler also watches its
-# own local state during `wrangler dev`, so .wrangler must be excluded or the
-# dev server reloads in a loop as D1 writes to disk.
+# The asset directory is the repo root, so that GitHub Pages keeps serving the
+# site unchanged until the DNS cutover. The cost of that choice is that this
+# file is the only thing standing between a new file in the repo and the public
+# internet. The first version listed files by name, and three files added later
+# (seed-2026-08.sql, setup.mjs, .gitignore) were published without anyone
+# noticing. So: exclude by extension, not by name, and let anything genuinely
+# web-facing be the exception.
+#
+# Run "node verify.mjs <url>" after deploying. It fails if any of these come
+# back as anything other than 404.
+
+# Directories that are never web content
 .wrangler/
 worker/
 node_modules/
-schema.sql
-wrangler.jsonc
-package.json
-package-lock.json
-README.md
-CLAUDE.md
 .github/
 .git/
 .claude/
-.assetsignore
-
-# Full-size photo originals are kept in git for safekeeping, not served.
 img/archive/
 
-# Source newsletters are uploaded to R2 by the admin, never served as files.
+# Source, config, tooling, and docs, by extension
+*.sql
+*.mjs
+*.cjs
+*.md
+*.json
+*.jsonc
+*.toml
+*.yaml
+*.yml
+*.lock
+*.log
+*.ps1
+*.sh
+*.py
+
+# Anything that could carry a secret
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+
+# Source newsletters. These carry member birthdays; they belong in R2.
 *.pdf
+
+# Dotfiles. .nojekyll and .assetsignore are not content either.
+.gitignore
+.gitattributes
+.assetsignore
+.editorconfig
