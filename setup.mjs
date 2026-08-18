@@ -53,7 +53,7 @@ if (!who.ok || /Not logged in/i.test(who.out)) {
     'Use that exact form rather than "npx wrangler login". On this machine the',
     'npm and npx shims resolve into another user profile and fail with EPERM.',
     '',
-    'Then run "npm run setup" again.',
+    'Then run "node setup.mjs" again.',
   ].join('\n'));
 }
 const account = who.out.match(/│\s*([^│]+?)\s*│\s*([0-9a-f]{32})\s*│/);
@@ -116,7 +116,7 @@ if (!accessReady) {
      fine. One-time PIN emails them a code, so there is no password.
   3. Copy the application's AUD tag and your Zero Trust team name into
      ACCESS_TEAM_DOMAIN and ACCESS_AUD in ${CONFIG}, then run:
-         npm run deploy
+         node node_modules/wrangler/bin/wrangler.js deploy
   4. Turn OFF the workers.dev route for this worker, so the editor is only
      reachable through the domain Access protects.
 

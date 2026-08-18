@@ -130,15 +130,17 @@ npm and npx shims resolve into another user's profile and fail with `EPERM`.
 Then, from this folder:
 
 ```bash
-npm install
-npm run setup
+node setup.mjs
 ```
 
-`npm run setup` creates the database and the bucket, writes the database id into
+That creates the database and the bucket, writes the database id into
 `wrangler.jsonc`, applies the schema, seeds the August 2026 issue, and deploys.
 It is safe to run more than once; each step checks for what already exists. It
 prints the account it is about to use, so stop it there if that is the wrong
 Cloudflare account.
+
+`npm run setup` does the same thing on a machine with a working npm. On the
+current one, call `node` directly as above and skip npm altogether.
 
 Then create the Access application that guards the editor:
 
@@ -161,8 +163,7 @@ everything. That is the intended state, not a bug.
 ### Running it locally
 
 ```bash
-npm install
-npm run dev
+node node_modules/wrangler/bin/wrangler.js dev --persist-to ../.wrangler-state/roanoke
 ```
 
 `--persist-to` has to point outside this folder. The site files are served from
