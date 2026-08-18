@@ -151,12 +151,22 @@ Then create the Access application that guards the editor:
 2. Policy: **Allow**, include the specific staff email addresses. A Gmail address
    is fine. The one-time PIN login emails a code, so there is no password and no
    account for anyone to create.
-3. Copy the application's **AUD** tag and your team name into `ACCESS_TEAM_DOMAIN`
-   and `ACCESS_AUD` in `wrangler.jsonc`, then deploy again.
-4. **Turn off the `workers.dev` route** for this Worker. Access protects the
-   custom domain; the workers.dev address would be a way around it. The Worker
-   also verifies the signed Access token on every admin request as a second line
-   of defence, but do both.
+3. Copy the application's **AUD** tag (on the app's **Details** tab, which only
+   appears once the app is saved) and your team name into `ACCESS_TEAM_DOMAIN`
+   and `ACCESS_AUD` in `wrangler.jsonc`, then deploy again. Neither value is a
+   secret; both are safe in the committed config.
+
+   Add the destinations as **public hostnames with a path** (`/admin` and
+   `/api/admin`), not as a **Workers** destination. A Workers destination covers
+   the whole worker, which puts the login wall in front of the entire public
+   church website. That happened once during setup.
+4. After the DNS cutover, **turn off the `workers.dev` route**. Access is
+   attached to specific hostnames, so any other hostname reaching the worker is
+   a way around it. For the same reason `preview_urls` is set to `false` in
+   `wrangler.jsonc`: a versioned preview hostname is not covered by the Access
+   application. The worker verifies the signed Access token on every admin
+   request as a second line of defence, and that was confirmed by hitting a
+   preview URL with a forged token, but it should never be the only line.
 
 Until steps 1 to 3 are done, `/admin` returns "sign in required" and refuses
 everything. That is the intended state, not a bug.

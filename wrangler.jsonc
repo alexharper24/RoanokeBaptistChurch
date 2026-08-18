@@ -2,6 +2,12 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "roanoke-baptist",
 	"main": "worker/index.js",
+	// Off deliberately. A preview URL (<version>-roanoke-baptist.alexharper.workers.dev)
+	// is a different hostname, so the Access application covering /admin on the
+	// production hostname does not apply to it. The worker verifies the Access
+	// token itself and refuses those requests, but that is meant to be the second
+	// line of defence, not the only one. Nothing here needs preview URLs.
+	"preview_urls": false,
 	"compatibility_date": "2026-08-17",
 	"observability": {
 		"enabled": true
@@ -54,9 +60,9 @@
 		// Your Zero Trust team domain, e.g. "infinitesolutions" for
 		// infinitesolutions.cloudflareaccess.com. Used to fetch the Access
 		// public keys that sign the admin login assertion.
-		"ACCESS_TEAM_DOMAIN": "PASTE_YOUR_TEAM_NAME",
+		"ACCESS_TEAM_DOMAIN": "shy-truth-7b36",
 		// Application Audience (AUD) tag from the Access application's settings.
-		"ACCESS_AUD": "PASTE_ACCESS_AUD_TAG"
+		"ACCESS_AUD": "0927db781410b693edb340a109e1dbdec6b3887afa4b463c5839e266747c309b"
 	}
 	// No secrets are required. Admin identity comes from the Access JWT.
 }
