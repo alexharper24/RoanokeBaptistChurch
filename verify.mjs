@@ -46,9 +46,33 @@ for (const p of ['/', '/index.html', '/our-church.html', '/beliefs.html', '/gosp
 await check('missing page', '/no-such-page.html', 404);
 
 console.log(`\n${c.bold}The editor is locked${c.off}`);
+// Two shapes count as locked, and which one you get depends on how far setup
+// has progressed. Once the Access application exists, Access redirects to its
+// login page before the request reaches the worker. Until then the worker
+// rejects it itself. A 200 is the only real failure here.
 for (const p of ['/admin', '/admin/', '/admin/index.html', '/admin/admin.js', '/admin/admin.css',
                  '/api/admin/issues', '/api/admin/whoami']) {
-  await check('admin', p, 403);
+  await checkLocked(p);
+}
+
+async function checkLocked(path) {
+  let got, dest = '';
+  try {
+    const r = await fetch(base + path, { redirect: 'manual' });
+    got = r.status;
+    dest = r.headers.get('location') || '';
+  } catch (e) {
+    got = 'error: ' + e.message;
+  }
+  const viaAccess = got === 302 && dest.includes('cloudflareaccess.com');
+  const viaWorker = got === 403;
+  if (viaAccess || viaWorker) {
+    pass++;
+    console.log('  ' + c.green + 'ok' + c.off + '   ' + got + ' ' + path + ' ' + c.dim + (viaAccess ? '(Access login)' : '(worker refused)') + c.off);
+  } else {
+    failures.push(path + ' returned ' + got + ' and is NOT protected');
+    console.log('  ' + c.red + 'FAIL' + c.off + ' ' + got + ' ' + path + ' ' + c.dim + '(not protected)' + c.off);
+  }
 }
 
 console.log(`\n${c.bold}Nothing that is not web content is served${c.off}`);
