@@ -1,58 +1,62 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "roanoke-baptist",
-  "main": "worker/index.js",
-  "compatibility_date": "2026-08-17",
-  "observability": { "enabled": true },
-
-  // The static site lives at the repo root so that GitHub Pages keeps working
-  // unchanged until the DNS cutover. .assetsignore keeps the worker source,
-  // the PDF archive, and tooling out of the uploaded asset set.
-  "assets": {
-    "directory": ".",
-    "binding": "ASSETS",
-    "not_found_handling": "404-page",
-    // Serve /page.html at /page.html with no redirect.
-    //
-    // Both trailing-slash modes 307 every .html URL to an extensionless one,
-    // and every canonical tag, sitemap entry, and internal link on this site
-    // ends in .html: that would put a redirect in front of the whole site at
-    // cutover. "none" is the only mode that serves them directly. It also
-    // switches off the implicit "/" to index.html mapping, so the Worker does
-    // that one route itself (see run_worker_first below).
-    "html_handling": "none",
-    // Only these paths pay for a Worker invocation. Everything else (every
-    // other page, the stylesheet, the images) is served straight from the edge.
-    // "/" is here because html_handling "none" turns off the directory-index
-    // mapping; the Worker serves index.html for it.
-    "run_worker_first": ["/", "/api/*", "/admin", "/admin/*", "/torch.html", "/torch"]
-  },
-
-  // Issue records. Create with:  wrangler d1 create roanoke-torch
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "roanoke-torch",
-      "database_id": "PASTE_DATABASE_ID_AFTER_d1_create"
-    }
-  ],
-
-  // Uploaded PDFs and feature graphics. Create with:  wrangler r2 bucket create roanoke-torch-files
-  "r2_buckets": [
-    {
-      "binding": "FILES",
-      "bucket_name": "roanoke-torch-files"
-    }
-  ],
-
-  "vars": {
-    // Your Zero Trust team domain, e.g. "infinitesolutions" for
-    // infinitesolutions.cloudflareaccess.com. Used to fetch the Access
-    // public keys that sign the admin login assertion.
-    "ACCESS_TEAM_DOMAIN": "PASTE_YOUR_TEAM_NAME",
-    // Application Audience (AUD) tag from the Access application's settings.
-    "ACCESS_AUD": "PASTE_ACCESS_AUD_TAG"
-  }
-
-  // No secrets are required. Admin identity comes from the Access JWT.
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "roanoke-baptist",
+	"main": "worker/index.js",
+	"compatibility_date": "2026-08-17",
+	"observability": {
+		"enabled": true
+	},
+	// The static site lives at the repo root so that GitHub Pages keeps working
+	// unchanged until the DNS cutover. .assetsignore keeps the worker source,
+	// the PDF archive, and tooling out of the uploaded asset set.
+	"assets": {
+		"directory": ".",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page",
+		// Serve /page.html at /page.html with no redirect.
+		//
+		// Both trailing-slash modes 307 every .html URL to an extensionless one,
+		// and every canonical tag, sitemap entry, and internal link on this site
+		// ends in .html: that would put a redirect in front of the whole site at
+		// cutover. "none" is the only mode that serves them directly. It also
+		// switches off the implicit "/" to index.html mapping, so the Worker does
+		// that one route itself (see run_worker_first below).
+		"html_handling": "none",
+		// Only these paths pay for a Worker invocation. Everything else (every
+		// other page, the stylesheet, the images) is served straight from the edge.
+		// "/" is here because html_handling "none" turns off the directory-index
+		// mapping; the Worker serves index.html for it.
+		"run_worker_first": [
+			"/",
+			"/api/*",
+			"/admin",
+			"/admin/*",
+			"/torch.html",
+			"/torch"
+		]
+	},
+	// Issue records. Create with:  wrangler d1 create roanoke-torch
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "roanoke-torch",
+			"database_id": "d5334897-6d91-4250-aecc-3bec84e70c5c"
+		}
+	],
+	// Uploaded PDFs and feature graphics. Create with:  wrangler r2 bucket create roanoke-torch-files
+	"r2_buckets": [
+		{
+			"binding": "FILES",
+			"bucket_name": "roanoke-torch-files"
+		}
+	],
+	"vars": {
+		// Your Zero Trust team domain, e.g. "infinitesolutions" for
+		// infinitesolutions.cloudflareaccess.com. Used to fetch the Access
+		// public keys that sign the admin login assertion.
+		"ACCESS_TEAM_DOMAIN": "PASTE_YOUR_TEAM_NAME",
+		// Application Audience (AUD) tag from the Access application's settings.
+		"ACCESS_AUD": "PASTE_ACCESS_AUD_TAG"
+	}
+	// No secrets are required. Admin identity comes from the Access JWT.
 }

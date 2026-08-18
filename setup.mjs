@@ -69,7 +69,9 @@ let db = dbs.find((d) => d.name === DB_NAME);
 if (db) {
   say(`Already exists (${db.uuid}).`);
 } else {
-  wrangler(['d1', 'create', DB_NAME]);
+  // -y stops wrangler offering to append a second binding of its own
+  // choosing; this config already declares the DB binding the worker uses.
+  wrangler(['d1', 'create', DB_NAME, '-y'], { allowFail: true });
   list = wrangler(['d1', 'list', '--json'], { capture: true });
   dbs = JSON.parse(list.out.slice(list.out.indexOf('[')));
   db = dbs.find((d) => d.name === DB_NAME);
@@ -83,14 +85,36 @@ const after = before.replace(/("database_id":\s*")[^"]*(")/, `$1${db.uuid}$2`);
 if (after === before && !before.includes(db.uuid)) {
   die(`Could not find the database_id line in ${CONFIG}. Set it to ${db.uuid} by hand.`);
 }
-writeFileSync(CONFIG, after);
+// Wrangler sometimes appends a binding of its own naming. The worker only
+// ever reads env.DB, so drop any extra entry pointing at the same database.
+const DUPE = new RegExp(',\s*\{\s*"binding":\s*"(?!DB")[^"]*",\s*'
+  + '"database_name":\s*"' + DB_NAME + '",\s*"database_id":\s*"[^"]*"\s*\}', 'g');
+const deduped = after.replace(DUPE, '');
+if (deduped !== after) say('Removed a duplicate D1 binding that wrangler added.');
+writeFileSync(CONFIG, deduped);
 say(before.includes(db.uuid) ? 'Already set.' : `${c.green}Set.${c.off}`);
 
 step(`Bucket "${BUCKET}"`);
 const mk = wrangler(['r2', 'bucket', 'create', BUCKET], { capture: true, allowFail: true });
-say(mk.ok ? `${c.green}Created.${c.off}`
-   : /already (exists|owned)/i.test(mk.out) ? 'Already exists.'
-   : die(`Could not create the bucket:\n${mk.out}`));
+if (mk.ok) {
+  say(`${c.green}Created.${c.off}`);
+} else if (/already (exists|owned)/i.test(mk.out)) {
+  say('Already exists.');
+} else if (/10042|enable R2/i.test(mk.out)) {
+  die([
+    'R2 is not switched on for this Cloudflare account yet.',
+    '',
+    'Open the Cloudflare dashboard, choose R2 in the sidebar, and enable it.',
+    'It is a one-time step: accept the R2 terms, with a billing method on the',
+    'account. Usage here stays well inside the free tier, since one newsletter',
+    'PDF a month is a few megabytes a year against 10 GB free.',
+    '',
+    'Everything before this step is already done. Re-run "node setup.mjs"',
+    'afterwards and it will carry on from here.',
+  ].join('\n'));
+} else {
+  die(`Could not create the bucket:\n${mk.out}`);
+}
 
 step('Applying the database schema');
 wrangler(['d1', 'execute', DB_NAME, '--remote', '--yes', '--file=./schema.sql']);
