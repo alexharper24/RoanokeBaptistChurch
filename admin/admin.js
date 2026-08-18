@@ -87,9 +87,7 @@
       '<div class="rows"></div>' +
       '<div class="actions" style="margin-bottom:10px"><button type="button" class="btn add-row">Add a dated line</button></div>' +
       '<label class="field grow"><span>Paragraph text</span>' +
-        '<textarea class="b" rows="4" placeholder="One point per line, starting each with a dash:
-- School starts on Thursday, August 20
-- Parent-teacher meeting on Sunday at 5:00 PM"></textarea>' +
+        '<textarea class="b" rows="4" placeholder="One point per line, starting each with a dash:\n- School starts on Thursday, August 20\n- Parent-teacher meeting on Sunday at 5:00 PM"></textarea>' +
         '<small>Start each line with a dash and it becomes its own bulleted point. A single point with no dash shows as a plain paragraph.</small></label>' +
       '<div class="row"><label class="field"><span>Picture for this section <em>optional</em></span>' +
         '<input class="i" type="file" accept="image/jpeg,image/png,image/webp">' +

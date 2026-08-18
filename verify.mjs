@@ -9,6 +9,8 @@
  * content is being served, and no member birthdays reached the public page.
  * Exits non-zero if anything is wrong, so it can gate a deploy.
  */
+import { readFileSync } from 'node:fs';
+
 const base = (process.argv[2] || '').replace(/\/$/, '');
 if (!base) {
   console.error('Usage: node verify.mjs <site url>');
@@ -83,6 +85,22 @@ for (const p of ['/wrangler.jsonc', '/package.json', '/package-lock.json', '/sch
                  '/node_modules/wrangler/package.json',
                  '/The%20Torch;%20August%202026.pdf']) {
   await check('private', p, 404, true);
+}
+
+console.log(`
+${c.bold}The editor's own scripts parse${c.off}`);
+// A syntax error in admin.js takes the whole editor down, and every status code
+// here stays green because Access answers before the file is ever fetched. That
+// shipped once. Parse them rather than trusting a 302.
+for (const f of ['admin/admin.js', 'admin/parse-torch.js', 'main.js']) {
+  try {
+    new Function(readFileSync(f, 'utf8'));
+    pass++;
+    console.log('  ' + c.green + 'ok' + c.off + '   ' + f);
+  } catch (e) {
+    failures.push(f + ' does not parse: ' + e.message);
+    console.log('  ' + c.red + 'FAIL' + c.off + ' ' + f + ': ' + e.message);
+  }
 }
 
 console.log(`\n${c.bold}The Torch page${c.off}`);
