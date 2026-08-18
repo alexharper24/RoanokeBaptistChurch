@@ -24,6 +24,7 @@ worker/            Cloudflare Worker: the Torch API and page rendering
 schema.sql         Database tables for the newsletter
 seed-2026-08.sql   The August 2026 issue, as first content
 wrangler.jsonc     Cloudflare configuration
+setup.mjs          One-shot Cloudflare provisioning (npm run setup)
 .assetsignore      Files that must not be published to the web
 ```
 
@@ -79,7 +80,7 @@ To change wording or swap a photo, edit the file and re-upload it. Because styli
 - The welcome/building photo is low-resolution; a higher-resolution original would sharpen it.
 - The choir photo leads the "Life At Roanoke Baptist" gallery on **Our Church**, and the "Boldly Go!" flag display anchors a missions banner at the bottom of **Ministries**. Full-size originals are kept in `img/archive/`; the web copies in `img/` are resized to 1200px wide.
 - The Torch page now shows **August 2026**, transcribed from the printed PDF, minus the birthdays and anniversaries. Two graphics were lifted out of that PDF (`img/torch-2026-08-*.jpg`); the rest of its images are clip art and were left behind.
-- **Still to do before the editor is usable:** create the D1 database and R2 bucket, set up the Cloudflare Access application, and fill in the four `PASTE_...` placeholders in `wrangler.jsonc`. See "The Torch editor" above.
+- **Still to do before the editor is usable:** sign in with wrangler, run `npm run setup`, then create the Cloudflare Access application and fill in `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.jsonc`. See "The Torch editor" below.
 - **Not yet decided:** the September 5 Steele/Bachman wedding was in the printed August issue but is left off the website, since it names private individuals on a page anyone can read. Add it back if the church would rather it were public.
 
 ## The Torch editor (Cloudflare)
@@ -117,20 +118,27 @@ while the PDF contains the birthday page.
 
 ### First-time setup
 
-Run these once, from this folder, signed in with `wrangler login`:
+Sign in once, in a normal terminal window so it can open a browser:
 
 ```bash
-npx wrangler d1 create roanoke-torch
+node node_modules/wrangler/bin/wrangler.js login
 ```
 
-Paste the returned `database_id` into `wrangler.jsonc`, then:
+Use that exact form rather than `npx wrangler login`. On the current machine the
+npm and npx shims resolve into another user's profile and fail with `EPERM`.
+
+Then, from this folder:
 
 ```bash
-npx wrangler r2 bucket create roanoke-torch-files
-npm run db:init
-npm run seed
-npx wrangler deploy
+npm install
+npm run setup
 ```
+
+`npm run setup` creates the database and the bucket, writes the database id into
+`wrangler.jsonc`, applies the schema, seeds the August 2026 issue, and deploys.
+It is safe to run more than once; each step checks for what already exists. It
+prints the account it is about to use, so stop it there if that is the wrong
+Cloudflare account.
 
 Then create the Access application that guards the editor:
 
@@ -154,7 +162,7 @@ everything. That is the intended state, not a bug.
 
 ```bash
 npm install
-npx wrangler dev --persist-to ../.wrangler-state/roanoke
+npm run dev
 ```
 
 `--persist-to` has to point outside this folder. The site files are served from
