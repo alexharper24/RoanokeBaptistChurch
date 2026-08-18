@@ -33,8 +33,12 @@ function json(data, status = 200) {
 // ---------------------------------------------------------------------------
 
 const PERSONAL_HEADINGS = /\b(happy\s+)?(birthday|anniversar(y|ies))\b/i;
-// 'Charlotte Pfeiffer—8/3' or 'Stan & Melanie Harper - 8/3'
-const NAME_DATE_LINE = /^[A-Z][A-Za-z.'-]+(?:\s+[&A-Z][A-Za-z.'-]*){1,4}\s*[—–-]\s*\d{1,2}\/\d{1,2}\s*$/;
+// 'Charlotte Pfeiffer—8/3', 'Stan & Melanie Harper - 8/3', 'Mary Owen 8/25'.
+// The separator is deliberately loose: text pasted out of Word or a PDF arrives
+// with em dashes, en dashes, hyphens, colons, or nothing at all, and a detector
+// that only knew one of them would wave the others straight through.
+const NAME_DATE_LINE =
+  /^[A-Z][A-Za-z.'-]+(?:\s+[&A-Z][A-Za-z.'-]*){1,4}\s*[—–‒―~:,-]?\s*\d{1,2}\/\d{1,2}\s*$/;
 
 export function findPrivacyWarnings(issue) {
   const warnings = [];
