@@ -61,6 +61,16 @@ export function findPrivacyWarnings(issue) {
   return warnings;
 }
 
+// The people listed at the top of every issue. Hard-coded because it changes
+// when the church staff changes, not month to month; if that stops being true
+// it belongs in the database alongside the rest of the issue.
+const STAFF = [
+  { name: 'Mike Tarr', role: 'Pastor', photo: 'img/torch-staff-mike-tarr.jpg' },
+  { name: 'James Bradley', role: 'Outreach Director', photo: 'img/torch-staff-james-bradley.jpg' },
+  { name: 'Jon Lakie', role: 'Youth Pastor', photo: 'img/torch-staff-jon-lakie.jpg' },
+  { name: 'Jason Tarr', role: 'Assistant Pastor', photo: 'img/torch-staff-jason-tarr.jpg' },
+];
+
 // ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------
@@ -291,11 +301,13 @@ export function renderIssue(issue, opts = {}) {
     <hr class="torch-rule">
   </div>
 
-  <div class="torch-staff torch-card" style="justify-content:center;text-align:center;padding-top:22px;">
-    <div><span class="nm">Mike Tarr</span><br><span class="rl">Pastor</span></div>
-    <div><span class="nm">James Bradley</span><br><span class="rl">Outreach Director</span></div>
-    <div><span class="nm">Jon Lakie</span><br><span class="rl">Youth Pastor</span></div>
-    <div><span class="nm">Jason Tarr</span><br><span class="rl">Assistant Pastor</span></div>
+  <div class="torch-staff torch-card">
+${STAFF.map(
+  (p) =>
+    `    <div class="staff-person">` +
+    `<img class="staff-avatar" src="${p.photo}" alt="${esc(p.name)}" loading="lazy" width="520" height="520">` +
+    `<span class="nm">${esc(p.name)}</span><span class="rl">${esc(p.role)}</span></div>`
+).join('\n')}
   </div>
 
   ${feature}
