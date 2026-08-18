@@ -87,7 +87,11 @@
       '<div class="rows"></div>' +
       '<div class="actions" style="margin-bottom:10px"><button type="button" class="btn add-row">Add a dated line</button></div>' +
       '<label class="field grow"><span>Paragraph text</span>' +
-        '<textarea class="b" rows="3" placeholder="Anything that is not a dated line. Leave a blank line between paragraphs."></textarea></label>';
+        '<textarea class="b" rows="3" placeholder="Anything that is not a dated line. Leave a blank line between paragraphs."></textarea></label>' +
+      '<div class="row"><label class="field"><span>Picture for this section <em>optional</em></span>' +
+        '<input class="i" type="file" accept="image/jpeg,image/png,image/webp">' +
+        '<small class="istatus"></small></label>' +
+        '<div class="field"><span>&nbsp;</span><img class="ipreview thumb" alt="" hidden></div></div>';
 
     box.querySelector('.h').value = c.heading || '';
     box.querySelector('.a').value = c.accent || '';
@@ -95,6 +99,31 @@
     var rows = box.querySelector('.rows');
     (c.rows || []).forEach(function (r) { rows.appendChild(eventRow(r)); });
     box.querySelector('.add-row').onclick = function () { rows.appendChild(eventRow()); markDirty(); };
+    box.dataset.image = c.image || '';
+    if (c.image) {
+      var pv = box.querySelector('.ipreview');
+      pv.src = /^img\//.test(c.image) ? '/' + c.image : '/api/admin/file/' + encodeURIComponent(c.image);
+      pv.hidden = false;
+    }
+    box.querySelector('.i').onchange = function () {
+      var f = this.files[0];
+      if (!f) return;
+      var status = box.querySelector('.istatus');
+      status.textContent = 'Uploading...';
+      // The slot name keeps each section's picture in its own object, so two
+      // sections in the same issue cannot overwrite one another.
+      upload(f, 'image', 'sec' + (Array.prototype.indexOf.call($('cardList').children, box) + 1))
+        .then(function (r) {
+          box.dataset.image = r.key;
+          var pv = box.querySelector('.ipreview');
+          pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
+          pv.hidden = false;
+          status.textContent = 'Added.';
+          markDirty();
+          schedulePreview();
+        })
+        .catch(function (e) { status.textContent = e.message; });
+    };
     box.querySelector('.card-head button').onclick = function () { box.remove(); markDirty(); };
     return box;
   }
@@ -108,6 +137,7 @@
         accent: box.querySelector('.a').value,
         body: box.querySelector('.b').value.trim(),
         rows: readRows(box.querySelector('.rows')),
+        image: box.dataset.image || null,
       };
     }).filter(function (c) { return c.heading || c.body || c.rows.length; });
   }
@@ -196,13 +226,14 @@
   };
 
   // --------------------------------------------------------------- uploads
-  function upload(file, kind) {
+function upload(file, kind, slot) {
     var slug = $('issueMonth').value;
     if (!slug) return Promise.reject(new Error('Choose the month first.'));
     var fd = new FormData();
     fd.append('file', file);
     fd.append('kind', kind);
     fd.append('slug', slug);
+    if (slot) fd.append('name', slot);
     return api('/api/admin/upload', { method: 'POST', body: fd });
   }
 
@@ -277,28 +308,77 @@
   $('draftBtn').onclick = function () { save('draft'); };
   $('publishBtn').onclick = function () { save('published'); };
 
-  $('previewBtn').onclick = function () {
-    api('/api/admin/preview', {
+  // ------------------------------------------------------------- live preview
+  // Rendered by the same worker function that renders the real page, so what
+  // the editor sees is what visitors get. That is a small request per update,
+  // hence a debounce rather than rendering on every keystroke.
+  var previewTimer = null, previewBusy = false, previewAgain = false;
+
+  function schedulePreview() {
+    if ($('previewPanel').hidden || !$('previewLive').checked) return;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(renderPreview, 500);
+  }
+
+  function renderPreview() {
+    if (previewBusy) { previewAgain = true; return; }
+    previewBusy = true;
+    note($('previewNote'), 'Updating...');
+    return api('/api/admin/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(gather('draft')),
     }).then(function (r) {
-      $('previewPanel').hidden = false;
-      var doc = $('previewFrame').contentDocument;
+      var frame = $('previewFrame');
+      // Hold the reader's place, or the panel jumps to the top on every
+      // keystroke and becomes impossible to work against.
+      var scroll = 0;
+      try { scroll = frame.contentWindow.scrollY || 0; } catch (e) {}
+      var doc = frame.contentDocument;
       doc.open();
       doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="stylesheet" href="/style.css"></head>' +
+        '<link rel="stylesheet" href="/style.css?v=9"></head>' +
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();
-      $('previewPanel').scrollIntoView({ behavior: 'smooth' });
-    }).catch(function (e) { banner(e.message, 'bad'); });
+      if (scroll) setTimeout(function () { try { frame.contentWindow.scrollTo(0, scroll); } catch (e) {} }, 60);
+      note($('previewNote'), 'Up to date.', 'ok');
+    }).catch(function (e) {
+      note($('previewNote'), e.message, 'bad');
+    }).then(function () {
+      previewBusy = false;
+      if (previewAgain) { previewAgain = false; schedulePreview(); }
+    });
+  }
+
+  $('previewBtn').onclick = function () {
+    var panel = $('previewPanel');
+    panel.hidden = !panel.hidden;
+    this.textContent = panel.hidden ? 'Show preview' : 'Hide preview';
+    if (!panel.hidden) {
+      renderPreview();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   };
+  $('previewLive').onchange = function () { if (this.checked) renderPreview(); };
+  $('previewRefresh').onclick = function () { renderPreview(); };
+
+  // Typing, picking a colour, adding or removing a row all feed the preview.
+  document.addEventListener('input', schedulePreview);
+  document.addEventListener('change', schedulePreview);
 
   // -------------------------------------------------------------- privacy
   var pendingStatus = null;
+  function closePrivacy() {
+    $('privacyModal').hidden = true;
+  }
   function showPrivacy(warnings, status) {
+    // Never open with nothing to show. An empty dialog is just a trap.
+    if (!warnings || !warnings.length) {
+      note($('saveNote'), 'Could not save. Please try again.', 'bad');
+      return;
+    }
     pendingStatus = status;
     $('privacyList').innerHTML = '';
     warnings.forEach(function (w) {
@@ -308,8 +388,15 @@
     });
     $('privacyModal').hidden = false;
   }
-  $('privacyBack').onclick = function () { $('privacyModal').hidden = true; note($('saveNote'), 'Nothing was saved.', ''); };
-  $('privacyGo').onclick = function () { $('privacyModal').hidden = true; save(pendingStatus, true); };
+  $('privacyBack').onclick = function () { closePrivacy(); note($('saveNote'), 'Nothing was saved.', ''); };
+  $('privacyGo').onclick = function () { closePrivacy(); save(pendingStatus, true); };
+  // Escape, and a click on the backdrop, both close it.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('privacyModal').hidden) { closePrivacy(); note($('saveNote'), 'Nothing was saved.', ''); }
+  });
+  $('privacyModal').addEventListener('click', function (e) {
+    if (e.target === this) { closePrivacy(); note($('saveNote'), 'Nothing was saved.', ''); }
+  });
 
   // ---------------------------------------------------------------- loading
   function fill(issue) {

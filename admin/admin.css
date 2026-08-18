@@ -106,10 +106,19 @@ textarea { resize: vertical; line-height: 1.5; }
 .banner.bad { background: #fdecec; color: var(--brand); border: 1px solid #f2c4c4; }
 .banner.ok { background: #e9f6ee; color: #1c6b41; border: 1px solid #bfe3cd; }
 
+.preview-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+.preview-head h2 { margin: 0; }
+.live { display: flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+.live input { width: 17px; height: 17px; }
+.card-edit .field em { font-style: normal; font-weight: 500; color: var(--muted); font-size: 0.82rem; }
+.ipreview { max-width: 130px; }
 iframe { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 
 /* Modal */
+/* An author `display` beats the browser's [hidden] rule, so setting .hidden in
+   JS would not close this. Keep the attribute authoritative. */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+.modal[hidden] { display: none; }
 .modal-box { background: #fff; border-radius: 12px; padding: 24px; max-width: 520px; width: 100%; }
 .modal-box h3 { margin: 0 0 10px; color: var(--brand); }
 .modal-box ul { background: var(--warn-bg); border: 1px solid #f0dcb8; border-radius: 8px; padding: 12px 12px 12px 30px; color: var(--warn); }

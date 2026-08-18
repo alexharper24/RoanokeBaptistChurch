@@ -78,6 +78,91 @@ function renderRows(rows) {
     .join('\n');
 }
 
+/** An image is either an R2 key from the admin, or a committed path under img/. */
+export function imageSrc(ref) {
+  if (!ref) return null;
+  return /^(img\/|\/)/.test(ref) ? ref.replace(/^\//, '') : '/api/torch/file/' + encodeURIComponent(ref);
+}
+
+// ---------------------------------------------------------------------------
+// Column balancing
+//
+// Splitting the cards down the middle by count left four cards stacked in one
+// column and two in the other. Estimate how tall each card renders and fill
+// whichever column is currently shorter. The estimate only has to be good
+// enough to order the decisions; it does not have to match the browser.
+// ---------------------------------------------------------------------------
+
+// Calibrated against real rendered heights at 1280px rather than guessed.
+const CARD_CHROME = 92;    // heading bar, padding, and the gap below the card
+const ROW_HEIGHT = 47;     // one dated line
+const LINE_HEIGHT = 26;    // one wrapped line of body text
+const PARA_GAP = 12;
+const IMAGE_HEIGHT = 180;  // varies 120-220 with aspect ratio; this is the middle
+
+export function estimateCardHeight(card, charsPerLine) {
+  let h = CARD_CHROME;
+  if (card.image) h += IMAGE_HEIGHT;
+  h += (card.rows || []).length * ROW_HEIGHT;
+  for (const para of (card.body || '').split(/\n{2,}/)) {
+    const t = para.trim();
+    if (!t) continue;
+    h += PARA_GAP + Math.max(1, Math.ceil(t.length / charsPerLine)) * LINE_HEIGHT;
+  }
+  return h;
+}
+
+// The grid is 1.3fr / 1fr (580px and 446px at desktop width), so the same
+// sentence wraps to fewer lines on the left. Measured, not guessed.
+const LEFT_CHARS = 95;
+const RIGHT_CHARS = 72;
+
+// A newsletter has a handful of sections, so every possible split can simply be
+// tried. Greedy placement left a 226px gap on the August issue where the best
+// split was 6px, which is the difference between "balanced" and "obviously
+// lopsided". 2^12 is a few thousand additions; the fallback is only there so a
+// pathological issue cannot hang the render.
+const EXHAUSTIVE_LIMIT = 14;
+
+export function balanceColumns(cards) {
+  const n = cards.length;
+  if (n === 0) return { left: [], right: [], leftHeight: 0, rightHeight: 0 };
+
+  const hL = cards.map((c) => estimateCardHeight(c, LEFT_CHARS));
+  const hR = cards.map((c) => estimateCardHeight(c, RIGHT_CHARS));
+
+  if (n > EXHAUSTIVE_LIMIT) {
+    const left = [], right = [];
+    let lh = 0, rh = 0;
+    cards.forEach((card, i) => {
+      if (Math.max(lh + hL[i], rh) <= Math.max(lh, rh + hR[i])) { left.push(card); lh += hL[i]; }
+      else { right.push(card); rh += hR[i]; }
+    });
+    return { left, right, leftHeight: lh, rightHeight: rh };
+  }
+
+  let best = null;
+  for (let mask = 0; mask < 1 << n; mask++) {
+    let lh = 0, rh = 0;
+    for (let i = 0; i < n; i++) {
+      if (mask & (1 << i)) rh += hR[i];
+      else lh += hL[i];
+    }
+    const diff = Math.abs(lh - rh);
+    // Tie-break towards keeping the first section on the left, so the reading
+    // order stays natural when two splits are equally balanced.
+    const firstLeft = (mask & 1) === 0;
+    if (!best || diff < best.diff || (diff === best.diff && firstLeft && !best.firstLeft)) {
+      best = { diff, mask, lh, rh, firstLeft };
+    }
+  }
+
+  const left = [], right = [];
+  cards.forEach((card, i) => (best.mask & (1 << i) ? right : left).push(card));
+  return { left, right, leftHeight: best.lh, rightHeight: best.rh };
+}
+
+
 function renderCard(card) {
   const accent = ACCENTS.has(card.accent || '') ? card.accent || '' : '';
   const body = (card.body || '')
@@ -86,9 +171,14 @@ function renderCard(card) {
     .filter(Boolean)
     .map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`)
     .join('\n');
+  const src = imageSrc(card.image);
+  const img = src
+    ? `<img class="torch-card-img" src="${esc(src)}" alt="${esc(card.image_alt || card.heading || '')}" loading="lazy">`
+    : '';
   return (
     `<div class="torch-card${accent ? ' ' + accent : ''}">` +
     (card.heading ? `<h4>${esc(card.heading)}</h4>` : '') +
+    img +
     renderRows(card.rows) +
     body +
     `</div>`
@@ -105,18 +195,16 @@ export function renderIssue(issue, opts = {}) {
     );
   }
 
-  const cards = issue.cards || [];
-  const half = Math.ceil(cards.length / 2);
-  const left = cards.slice(0, half).map(renderCard).join('\n');
-  const right = cards.slice(half).map(renderCard).join('\n');
+  // The dated events list is a card like any other for layout purposes, so it
+  // takes part in the balancing rather than always being forced into the left.
+  const allCards = (issue.events || []).length
+    ? [{ heading: 'Upcoming Events', rows: issue.events, body: '' }].concat(issue.cards || [])
+    : (issue.cards || []);
+  const cols = balanceColumns(allCards);
+  const left = cols.left.map(renderCard).join('\n');
+  const right = cols.right.map(renderCard).join('\n');
 
-  // A feature image is either an R2 key uploaded through the admin, or a plain
-  // path to a committed file under img/ for artwork placed by the developer.
-  const featureSrc = issue.feature_image
-    ? /^(img\/|\/)/.test(issue.feature_image)
-      ? issue.feature_image.replace(/^\//, '')
-      : `/api/torch/file/${encodeURIComponent(issue.feature_image)}`
-    : null;
+  const featureSrc = imageSrc(issue.feature_image);
 
   const feature = issue.feature_title
     ? `<div class="torch-feature">` +
@@ -130,10 +218,6 @@ export function renderIssue(issue, opts = {}) {
       (issue.feature_when ? `<p class="when">${esc(issue.feature_when)}</p>` : '') +
       (issue.feature_body ? `<p>${esc(issue.feature_body)}</p>` : '') +
       `</div>`
-    : '';
-
-  const events = (issue.events || []).length
-    ? `<div class="torch-card"><h4>Upcoming Events</h4>${renderRows(issue.events)}</div>`
     : '';
 
   const pdf =
@@ -169,7 +253,7 @@ export function renderIssue(issue, opts = {}) {
   ${feature}
 
   <div class="torch-grid" style="margin-top:8px;">
-    <div>${events}${left}</div>
+    <div>${left}</div>
     <div>${right}</div>
   </div>
 
@@ -256,11 +340,16 @@ export async function handlePublicApi(request, env, url) {
   const m = url.pathname.match(/^\/api\/torch\/file\/(.+)$/);
   if (m) {
     const key = decodeURIComponent(m[1]);
+    // Reachable only if this exact key belongs to a published issue: as the
+    // feature image, as a section image, or as a PDF explicitly made public.
     const row = await env.DB.prepare(
-      `SELECT pdf_key, pdf_public, feature_image FROM torch_issues
-        WHERE status='published' AND (feature_image=?1 OR (pdf_key=?1 AND pdf_public=1))`
+      `SELECT 1 FROM torch_issues
+        WHERE status='published'
+          AND (feature_image = ?1
+               OR (pdf_key = ?1 AND pdf_public = 1)
+               OR cards_json LIKE ?2)`
     )
-      .bind(key)
+      .bind(key, '%"' + key.replace(/[%_]/g, '') + '"%')
       .first();
     if (!row) return new Response('Not found', { status: 404 });
 
@@ -386,7 +475,11 @@ export async function handleAdminApi(request, env, url, actor) {
     }
 
     const ext = isPdf ? 'pdf' : (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-    const key = `${isPdf ? 'issues' : 'features'}/${slug}.${ext}`;
+    // A slot name keeps section images from overwriting each other and the
+    // feature image. Restricted to safe characters since it lands in the key.
+    const slot = String(form.get('name') || '').replace(/[^a-z0-9-]/gi, '').slice(0, 24);
+    const base = slot ? `${slug}-${slot}` : slug;
+    const key = `${isPdf ? 'issues' : 'features'}/${base}.${ext}`;
     await env.FILES.put(key, file.stream(), {
       httpMetadata: { contentType: file.type },
     });

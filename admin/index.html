@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>The Torch, Editor | Roanoke Baptist Church</title>
   <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/admin/admin.css?v=1">
+  <link rel="stylesheet" href="/admin/admin.css?v=3">
 </head>
 <body>
 
@@ -139,7 +139,7 @@
   <!-- SAVE --------------------------------------------------------------- -->
   <section class="panel sticky">
     <div class="save-row">
-      <button type="button" class="btn" id="previewBtn">Preview</button>
+      <button type="button" class="btn" id="previewBtn">Show preview</button>
       <button type="button" class="btn" id="draftBtn">Save as draft</button>
       <button type="button" class="btn btn-primary" id="publishBtn">Publish to the website</button>
       <span id="saveNote" class="note"></span>
@@ -147,7 +147,13 @@
   </section>
 
   <section class="panel" id="previewPanel" hidden>
-    <h2>Preview</h2>
+    <div class="preview-head">
+      <h2>Preview</h2>
+      <label class="live"><input type="checkbox" id="previewLive" checked> Update as I type</label>
+      <button type="button" class="btn btn-x" id="previewRefresh">Refresh now</button>
+      <span id="previewNote" class="note"></span>
+    </div>
+    <p class="help">This is the real page, drawn by the same code the website uses. Nothing here is visible to anyone until you publish.</p>
     <iframe id="previewFrame" title="Preview of the Torch page"></iframe>
   </section>
 
@@ -167,6 +173,6 @@
   </div>
 </div>
 
-<script src="/admin/admin.js?v=1"></script>
+<script src="/admin/admin.js?v=3"></script>
 </body>
 </html>
