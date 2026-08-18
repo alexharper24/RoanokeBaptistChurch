@@ -289,7 +289,9 @@
     // Print wraps mid-sentence, so rejoin lines that do not end a sentence.
     var out = [];
     arr.forEach(function (line) {
-      if (out.length && !/[.!?:]$/.test(out[out.length - 1])) out[out.length - 1] += ' ' + line;
+      // A line that starts with a bullet marker always begins a new point.
+      var starts = /^-\s/.test(line);
+      if (!starts && out.length && !/[.!?:]$/.test(out[out.length - 1])) out[out.length - 1] += ' ' + line;
       else out.push(line);
     });
     return out.map(function (l) { return l.replace(/\s{2,}/g, ' ').trim(); }).join('\n\n');

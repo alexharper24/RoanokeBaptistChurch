@@ -251,7 +251,17 @@ a { color: inherit; }
 .torch-feature.patriotic .when { color: var(--gold-light); }
 .torch-feature.patriotic .when .yr { color: #fff; font-weight: 800; }
 .torch-feature.patriotic p { color: #e9eefb; }
-.torch-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 26px; align-items: start; }
+/* The two columns are made the same height and their cards spread to fill it,
+   so neither side finishes short of the other. The balancer keeps the leftover
+   space small, which is what stops the spread from looking arbitrary. */
+.torch-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 26px; align-items: stretch; }
+.torch-grid > div { display: flex; flex-direction: column; gap: 22px; }
+/* Spread the leftover space across the cards rather than the gaps. Putting it
+   in the gaps (justify-content: space-between) made one column's gaps 92px
+   against the other's 22px, which read as a mistake; a few extra pixels of
+   room inside each card reads as padding. */
+.torch-grid > div > .torch-card { flex-grow: 1; }
+.torch-grid > div > .torch-card { margin-bottom: 0; }
 .torch-col-head { font-size: 1.4rem; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
 .torch-card { background: var(--white); border: 1px solid #e7ded0; border-radius: 12px; padding: 0 24px 20px; margin-bottom: 22px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); overflow: hidden; }
 .torch-card h4 { font-size: 1.12rem; color: #fff; background: var(--navy); margin: 0 -24px 16px; padding: 13px 24px; border-bottom: 3px solid var(--gold); }
@@ -280,6 +290,13 @@ a { color: inherit; }
    natural size: these come out of a print PDF at 180-540px, and upscaling a
    small one just makes it blurry. Wide images therefore fill the card, small
    ones stay small and centred. */
+/* Several points in one section read as a wall of text without this. */
+.torch-points { list-style: none; margin: 4px 0 0; padding: 0; }
+.torch-points li { position: relative; padding-left: 22px; margin-bottom: 10px; color: var(--text); line-height: 1.65; font-size: 0.97rem; }
+.torch-points li:last-child { margin-bottom: 0; }
+.torch-points li::before { content: ""; position: absolute; left: 4px; top: 0.62em; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.torch-card.accent-crimson .torch-points li::before { background: var(--brand); }
+.torch-card.accent-teal .torch-points li::before { background: var(--teal); }
 .torch-card-img { display: block; max-width: 100%; height: auto; margin: 0 auto 16px; border-radius: 8px; }
 .torch-pdf { text-align: center; margin: 22px 0 0; }
 .torch-pdf a { font-weight: 600; }

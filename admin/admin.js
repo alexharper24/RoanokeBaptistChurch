@@ -87,7 +87,10 @@
       '<div class="rows"></div>' +
       '<div class="actions" style="margin-bottom:10px"><button type="button" class="btn add-row">Add a dated line</button></div>' +
       '<label class="field grow"><span>Paragraph text</span>' +
-        '<textarea class="b" rows="3" placeholder="Anything that is not a dated line. Leave a blank line between paragraphs."></textarea></label>' +
+        '<textarea class="b" rows="4" placeholder="One point per line, starting each with a dash:
+- School starts on Thursday, August 20
+- Parent-teacher meeting on Sunday at 5:00 PM"></textarea>' +
+        '<small>Start each line with a dash and it becomes its own bulleted point. A single point with no dash shows as a plain paragraph.</small></label>' +
       '<div class="row"><label class="field"><span>Picture for this section <em>optional</em></span>' +
         '<input class="i" type="file" accept="image/jpeg,image/png,image/webp">' +
         '<small class="istatus"></small></label>' +
@@ -452,7 +455,7 @@ function upload(file, kind, slot) {
       doc.open();
       doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="stylesheet" href="/style.css?v=10"></head>' +
+        '<link rel="stylesheet" href="/style.css?v=11"></head>' +
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();

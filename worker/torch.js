@@ -84,6 +84,36 @@ export function imageSrc(ref) {
   return /^(img\/|\/)/.test(ref) ? ref.replace(/^\//, '') : '/api/torch/file/' + encodeURIComponent(ref);
 }
 
+// Splits a card's text into the separate points it is actually making. A blank
+// line starts a new point; so does a line beginning with -, *, a bullet, or the
+// arrow the printed newsletter uses for its lists.
+export function bodyPoints(body) {
+  const MARK = /^[-*•→>]\s+/;
+  const points = [];
+  for (const block of String(body || '').split(/\n{2,}/)) {
+    const lines = block.split(/\n/).map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    if (lines.some((l) => MARK.test(l))) {
+      let current = null;
+      for (const line of lines) {
+        if (MARK.test(line)) {
+          if (current) points.push(current);
+          current = line.replace(MARK, '');
+        } else if (current) {
+          current += ' ' + line;
+        } else {
+          points.push(line);
+        }
+      }
+      if (current) points.push(current);
+    } else {
+      points.push(lines.join(' '));
+    }
+  }
+  return points;
+}
+
+
 // ---------------------------------------------------------------------------
 // Column balancing
 //
@@ -115,10 +145,11 @@ export function estimateCardHeight(card, charsPerLine, contentWidth) {
     }
   }
   h += (card.rows || []).length * ROW_HEIGHT;
-  for (const para of (card.body || '').split(/\n{2,}/)) {
-    const t = para.trim();
-    if (!t) continue;
-    h += PARA_GAP + Math.max(1, Math.ceil(t.length / charsPerLine)) * LINE_HEIGHT;
+  const points = bodyPoints(card.body);
+  // A list item is indented, so it wraps a few characters sooner.
+  const chars = points.length > 1 ? charsPerLine - 5 : charsPerLine;
+  for (const t of points) {
+    h += PARA_GAP + Math.max(1, Math.ceil(t.length / chars)) * LINE_HEIGHT;
   }
   return h;
 }
@@ -179,12 +210,15 @@ export function balanceColumns(cards) {
 
 function renderCard(card) {
   const accent = ACCENTS.has(card.accent || '') ? card.accent || '' : '';
-  const body = (card.body || '')
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`)
-    .join('\n');
+  // One point reads as a paragraph. Two or more were running together as a
+  // wall of text, so they become a marked list.
+  const points = bodyPoints(card.body);
+  const body =
+    points.length > 1
+      ? '<ul class="torch-points">' + points.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>'
+      : points.length === 1
+        ? '<p>' + esc(points[0]) + '</p>'
+        : '';
   const src = imageSrc(card.image);
   const img = src
     ? `<img class="torch-card-img" src="${esc(src)}" alt="${esc(card.image_alt || card.heading || '')}" loading="lazy">`
