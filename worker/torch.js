@@ -81,11 +81,35 @@ function renderRows(rows) {
     .map(
       (r) =>
         `<div class="event-row"><div class="ev-date">${esc(r.date)}</div>` +
-        `<div class="ev-name">${esc(r.name)}` +
-        (r.detail ? ` <span class="ev-time">&middot; ${esc(r.detail)}</span>` : '') +
+        `<div class="ev-name">${escCopy(r.name)}` +
+        (r.detail ? ` <span class="ev-time">&middot; ${escCopy(r.detail)}</span>` : '') +
         `</div></div>`
     )
     .join('\n');
+}
+
+// House rule: no em or en dashes joining clauses in visible copy. Text lifted
+// out of the printed newsletter is full of them ("5:30pm— Men pray in the
+// Preacher's office"), so normalise on the way to the page rather than trusting
+// every future issue to be clean.
+//
+// A dash between two numbers is a range and stays: "8am–6pm", "2020–2024".
+// Otherwise it becomes a full stop before a capital, a comma before anything
+// else, which is how those sentences actually read.
+/** Escape for output, with the dash rule applied. For visible prose only. */
+export function escCopy(text) {
+  return esc(tidyCopy(text));
+}
+
+export function tidyCopy(text) {
+  return String(text ?? '')
+    .replace(/([^\s—–]+)\s*[—–]\s*([^\s—–]+)/g, (m, a, b) => {
+      const range = /\d/.test(a) && /\d/.test(b) && !/[a-z]{3,}/i.test(b.replace(/[ap]m/i, ''));
+      if (range) return a + '–' + b;
+      return a + (/^[A-Z]/.test(b) ? '. ' : ', ') + b;
+    })
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 /** An image is either an R2 key from the admin, or a committed path under img/. */
@@ -225,9 +249,9 @@ function renderCard(card) {
   const points = bodyPoints(card.body);
   const body =
     points.length > 1
-      ? '<ul class="torch-points">' + points.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>'
+      ? '<ul class="torch-points">' + points.map(function (t) { return '<li>' + escCopy(t) + '</li>'; }).join('') + '</ul>'
       : points.length === 1
-        ? '<p>' + esc(points[0]) + '</p>'
+        ? '<p>' + escCopy(points[0]) + '</p>'
         : '';
   const src = imageSrc(card.image);
   const img = src
@@ -271,10 +295,10 @@ export function renderIssue(issue, opts = {}) {
             issue.feature_title
           )}" loading="lazy">`
         : '') +
-      (issue.feature_kicker ? `<span class="section-label">${esc(issue.feature_kicker)}</span>` : '') +
-      `<h3>${esc(issue.feature_title)}</h3>` +
-      (issue.feature_when ? `<p class="when">${esc(issue.feature_when)}</p>` : '') +
-      (issue.feature_body ? `<p>${esc(issue.feature_body)}</p>` : '') +
+      (issue.feature_kicker ? `<span class="section-label">${escCopy(issue.feature_kicker)}</span>` : '') +
+      `<h3>${escCopy(issue.feature_title)}</h3>` +
+      (issue.feature_when ? `<p class="when">${escCopy(issue.feature_when)}</p>` : '') +
+      (issue.feature_body ? `<p>${escCopy(issue.feature_body)}</p>` : '') +
       `</div>`
     : '';
 
@@ -297,7 +321,7 @@ export function renderIssue(issue, opts = {}) {
       <path d="M12 12c.2 1.5-.9 2.1-1.5 3-.5.7-.9 1.5-.9 2.4a2.4 2.4 0 0 0 4.8 0c0-1.2-.7-2-1.4-2.8-.4.4-.7.8-1.2.9.5-1.2.5-2.4.2-3.5z" fill="#fbf6f4" opacity="0.85"/>
     </svg>
     <span class="torch-issue">${esc(issue.issue_label)} Issue</span>
-    ${issue.verse_text ? `<p class="torch-verse">"${esc(issue.verse_text)}" <span class="r">${esc(issue.verse_ref)}</span></p>` : ''}
+    ${issue.verse_text ? `<p class="torch-verse">"${escCopy(issue.verse_text)}" <span class="r">${esc(issue.verse_ref)}</span></p>` : ''}
     <hr class="torch-rule">
   </div>
 

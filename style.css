@@ -269,7 +269,10 @@ a { color: inherit; }
 #torchPage .section { background: #faf6f1; }
 .event-row { display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px dashed #e8e1d4; }
 .event-row:last-child { border-bottom: none; }
-.event-row .ev-date { flex-shrink: 0; width: 78px; color: var(--brand); font-weight: 700; font-size: 0.9rem; }
+/* A fixed 78px made "August 2-5" and "September 5" wrap onto two lines inside
+   the pill. min-width keeps the short dates aligned in a column, nowrap lets a
+   long one push out rather than break. */
+.event-row .ev-date { flex-shrink: 0; min-width: 88px; white-space: nowrap; color: var(--brand); font-weight: 700; font-size: 0.9rem; }
 .event-row .ev-name { color: var(--text); font-size: 0.96rem; }
 .event-row .ev-name .ev-time { color: var(--text-light); font-size: 0.85rem; }
 /* Four people across, each with a photo. The old rule targeted bare divs,
@@ -337,7 +340,7 @@ a { color: inherit; }
 .torch-flame { animation: torchFlicker 2.8s ease-in-out infinite; transform-origin: 50% 82%; }
 .torch-card h4 { position: relative; padding-left: 32px; }
 .torch-card h4::before { content: ""; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; border-radius: 2px; background: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,74,0.25); }
-.event-row .ev-date { display: inline-block; background: var(--warm-gray); color: var(--brand); border: 1px solid #ecdfdc; border-radius: 14px; padding: 2px 8px; text-align: center; font-size: 0.8rem; }
+.event-row .ev-date { display: inline-block; background: var(--warm-gray); color: var(--brand); border: 1px solid #ecdfdc; border-radius: 14px; padding: 3px 10px; text-align: center; font-size: 0.8rem; align-self: flex-start; }
 .torch-card.accent-teal h4 { background: linear-gradient(135deg, var(--teal), #17564c); }
 .torch-card.accent-crimson h4 { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); }
 .torch-card.accent-teal h4::before, .torch-card.accent-crimson h4::before { background: var(--gold-light); box-shadow: 0 0 0 3px rgba(255,255,255,0.22); }

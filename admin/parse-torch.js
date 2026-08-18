@@ -117,13 +117,27 @@
     return splitWeldedHeadings(mendDropCaps(lines));
   }
 
+  // Same dash rule the page applies, run here too so the editor shows what
+  // will actually publish rather than a version full of em dashes that
+  // silently changes on save.
+  function tidyCopy(text) {
+    return String(text == null ? '' : text)
+      .replace(/([^\s—–]+)\s*[—–]\s*([^\s—–]+)/g, function (m, a, b) {
+        var range = /\d/.test(a) && /\d/.test(b) && !/[a-z]{3,}/i.test(b.replace(/[ap]m/i, ''));
+        if (range) return a + '–' + b;
+        return a + (/^[A-Z]/.test(b) ? '. ' : ', ') + b;
+      })
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
   function splitRow(line) {
     var detail = '';
     var m = line.match(TIME_TAIL);
     if (m) { detail = m[1].trim(); line = line.replace(TIME_TAIL, '').trim(); }
     var lead = line.match(DATE_LEAD);
     if (lead) {
-      return { date: lead[1], name: lead[2].replace(/[–—]/g, ': ').replace(/\s{2,}/g, ' ').trim(), detail: detail };
+      return { date: lead[1], name: tidyCopy(lead[2].replace(/[–—]/g, ': ')), detail: tidyCopy(detail) };
     }
     return null;
   }
@@ -294,7 +308,7 @@
       if (!starts && out.length && !/[.!?:]$/.test(out[out.length - 1])) out[out.length - 1] += ' ' + line;
       else out.push(line);
     });
-    return out.map(function (l) { return l.replace(/\s{2,}/g, ' ').trim(); }).join('\n\n');
+    return out.map(function (l) { return tidyCopy(l); }).join('\n\n');
   }
 
   var api = { parse: parse, isHeading: isHeading, tidyHeading: tidyHeading };
