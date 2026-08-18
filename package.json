@@ -13,6 +13,7 @@
     "seed:local": "wrangler d1 execute roanoke-torch --local --file=./seed-2026-08.sql"
   },
   "devDependencies": {
+    "pdfjs-dist": "^6.2.108",
     "wrangler": "^4.0.0"
   },
   "allowScripts": {

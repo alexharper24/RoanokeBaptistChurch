@@ -200,20 +200,124 @@
     return { events: events, skipped: skipped };
   }
 
+  // ------------------------------------------------------------------ import
+  // Fills the whole form from a newsletter. Two ways in: the PDF, or pasted
+  // text if the PDF will not read. Both end up in the same parser.
+
+  function applyParsed(r, sourceLabel) {
+    if (r.slug) $('issueMonth').value = r.slug;
+    if (r.issue_label) $('issueLabel').value = r.issue_label;
+    if (r.verse_text) $('verseText').value = r.verse_text;
+    if (r.verse_ref) $('verseRef').value = r.verse_ref;
+
+    $('eventRows').innerHTML = '';
+    (r.events.length ? r.events : [{}]).forEach(function (e) { $('eventRows').appendChild(eventRow(e)); });
+    $('cardList').innerHTML = '';
+    r.cards.forEach(function (c) { $('cardList').appendChild(cardEditor(c)); });
+
+    var box = $('importSummary');
+    var html = '<h3>Filled in from ' + sourceLabel + '</h3><ul>';
+    html += '<li>' + (r.issue_label || 'month not found') + '</li>';
+    html += '<li>' + r.events.length + ' dated event' + (r.events.length === 1 ? '' : 's') + '</li>';
+    html += '<li>' + r.cards.length + ' section' + (r.cards.length === 1 ? '' : 's') +
+            (r.cards.length ? ': ' + r.cards.map(function (c) { return c.heading; }).join(', ') : '') + '</li>';
+    html += '</ul>';
+    if (r.skipped.length) {
+      html += '<p class="dropped"><strong>Left out on purpose:</strong> ' + r.skipped.join(', ') +
+              '. Member birthdays and anniversaries stay in the printed edition.</p>';
+    }
+    if (r.notes.length) html += '<p>' + r.notes.join(' ') + '</p>';
+    html += '<p>Read through everything below before publishing. The newsletter is laid out for print, ' +
+            'so some text will have landed in the wrong section.</p>';
+    box.innerHTML = html;
+    box.hidden = false;
+    markDirty();
+    schedulePreview();
+  }
+
   $('parseBtn').onclick = function () {
     var text = $('pasteBox').value;
     if (!text.trim()) { note($('parseNote'), 'Paste the newsletter text first.', 'bad'); return; }
-    var out = parsePaste(text);
-    if (!out.events.length) {
-      note($('parseNote'), 'No dated events found. You can still add them by hand below.', 'bad');
+    var r = window.TorchParse.parse(text);
+    if (!r.events.length && !r.cards.length) {
+      note($('parseNote'), 'Nothing recognisable found in that text.', 'bad');
       return;
     }
-    $('eventRows').innerHTML = '';
-    out.events.forEach(function (e) { $('eventRows').appendChild(eventRow(e)); });
-    var msg = 'Filled in ' + out.events.length + ' event' + (out.events.length === 1 ? '' : 's') + '. Please check them.';
-    if (out.skipped) msg += ' ' + out.skipped + ' line' + (out.skipped === 1 ? '' : 's') + ' of birthdays or anniversaries were left out on purpose.';
-    note($('parseNote'), msg, 'ok');
-    markDirty();
+    applyParsed(r, 'the pasted text');
+    note($('parseNote'), 'Done. See the summary above.', 'ok');
+  };
+
+  // pdf.js is vendored under /admin/vendor rather than loaded from a CDN, and
+  // is only fetched when someone actually imports a PDF.
+  var pdfjs = null;
+  function loadPdfJs() {
+    if (pdfjs) return Promise.resolve(pdfjs);
+    return import('/admin/vendor/pdf.min.js').then(function (mod) {
+      mod.GlobalWorkerOptions.workerSrc = '/admin/vendor/pdf.worker.min.js';
+      pdfjs = mod;
+      return mod;
+    });
+  }
+
+  function readPdfText(file) {
+    return loadPdfJs()
+      .then(function (mod) { return file.arrayBuffer().then(function (buf) { return mod.getDocument({ data: buf }).promise; }); })
+      .then(function (doc) {
+        var pages = [];
+        for (var n = 1; n <= doc.numPages; n++) pages.push(n);
+        return Promise.all(pages.map(function (n) {
+          return doc.getPage(n).then(function (page) { return page.getTextContent(); }).then(function (tc) {
+            // Rebuild lines from the positioned text runs: pdf.js gives items,
+            // not lines, and a newsletter is laid out in columns.
+            // pdf.js hands back positioned runs, not lines. Group runs by
+            // baseline, and insert a space where there is a horizontal gap:
+            // without that, drop caps and kerned headings run together as
+            // "ROANOKEBAPTIST SCHOOLNEWS".
+            var lines = [];
+            var y = null;
+            var endX = null;
+            var buf = '';
+            tc.items.forEach(function (it) {
+              if (!it.str) return;
+              var ty = it.transform[5];
+              var tx = it.transform[4];
+              if (y !== null && Math.abs(ty - y) >= 3) { lines.push(buf); buf = ''; endX = null; }
+              if (buf && endX !== null && tx - endX > 0.9 && !/\s$/.test(buf) && !/^\s/.test(it.str)) buf += ' ';
+              buf += it.str;
+              y = ty;
+              endX = tx + (it.width || 0);
+              if (it.hasEOL) { lines.push(buf); buf = ''; y = null; endX = null; }
+            });
+            if (buf) lines.push(buf);
+            return lines.join('\n');
+          });
+        })).then(function (texts) { return texts.join('\n'); });
+      });
+  }
+
+  $('importPdf').onchange = function () {
+    var file = this.files[0];
+    if (!file) return;
+    note($('importNote'), 'Reading the PDF...');
+    $('importSummary').hidden = true;
+    readPdfText(file)
+      .then(function (text) {
+        if (!text || text.replace(/\s/g, '').length < 50) {
+          throw new Error('No text found in that PDF. It may be a scan rather than a document. Use the paste box instead.');
+        }
+        var r = window.TorchParse.parse(text);
+        applyParsed(r, 'the PDF');
+        note($('importNote'), 'Read the PDF. Now saving a copy...');
+        // Keep the PDF on file too, so this is one step rather than two.
+        var slug = $('issueMonth').value || r.slug;
+        if (!slug) { note($('importNote'), 'Imported. Set the month, then upload the PDF below to keep a copy.', 'ok'); return; }
+        return upload(file, 'pdf').then(function (up) {
+          state.pdfKey = up.key;
+          $('pdfCurrent').textContent = 'A PDF is already on file.';
+          note($('importNote'), 'Imported, and the PDF is on file.', 'ok');
+        });
+      })
+      .catch(function (e) { note($('importNote'), e.message, 'bad'); });
   };
 
   // ----------------------------------------------------------------- month

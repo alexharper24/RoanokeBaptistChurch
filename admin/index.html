@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>The Torch, Editor | Roanoke Baptist Church</title>
   <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/admin/admin.css?v=3">
+  <link rel="stylesheet" href="/admin/admin.css?v=4">
 </head>
 <body>
 
@@ -54,15 +54,31 @@
     </div>
   </section>
 
-  <!-- PASTE HELPER ------------------------------------------------------- -->
+  <!-- IMPORT --------------------------------------------------------------- -->
   <section class="panel">
-    <h2>Start from the newsletter text <span class="opt">optional</span></h2>
-    <p class="help">Open the Torch document, select everything, copy, and paste it below. This fills in the dated events for you so you do not have to retype them. Check the result and fix anything it gets wrong.</p>
-    <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
-    <div class="actions">
-      <button type="button" class="btn" id="parseBtn">Fill in events from this text</button>
-      <span id="parseNote" class="note"></span>
+    <h2>Start from this month's Torch <span class="opt">recommended</span></h2>
+    <p class="help">Choose the PDF and it fills in the month, the verse, the dated events, and the sections. Read through afterwards and fix anything it got wrong. Nothing is saved or published until you say so.</p>
+    <div class="row">
+      <label class="field">
+        <span>The Torch PDF</span>
+        <input type="file" id="importPdf" accept="application/pdf">
+        <small>It also keeps a copy of the PDF on file for the church.</small>
+      </label>
     </div>
+    <div class="actions">
+      <span id="importNote" class="note"></span>
+    </div>
+    <div id="importSummary" class="summary" hidden></div>
+
+    <details class="fallback">
+      <summary>Or paste the text instead</summary>
+      <p class="help">If the PDF will not read, open the Torch document, select everything, copy, and paste it here.</p>
+      <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
+      <div class="actions">
+        <button type="button" class="btn" id="parseBtn">Fill in from this text</button>
+        <span id="parseNote" class="note"></span>
+      </div>
+    </details>
   </section>
 
   <!-- MASTHEAD ----------------------------------------------------------- -->
@@ -173,6 +189,7 @@
   </div>
 </div>
 
-<script src="/admin/admin.js?v=3"></script>
+<script src="/admin/parse-torch.js?v=1"></script>
+<script src="/admin/admin.js?v=4"></script>
 </body>
 </html>

@@ -20,6 +20,8 @@ robots.txt         Tells search engines they may index the site
 .nojekyll          Tells GitHub to serve the files exactly as-is
 
 admin/             The Torch editor for church staff (sign-in required)
+admin/parse-torch.js   Turns a newsletter into a draft issue
+admin/vendor/      pdf.js, vendored so the editor can read a PDF in the browser
 worker/            Cloudflare Worker: the Torch API and page rendering
 schema.sql         Database tables for the newsletter
 seed-2026-08.sql   The August 2026 issue, as first content
@@ -199,9 +201,25 @@ new added to this folder is public until proven otherwise; run this and see.
 
 ### Publishing an issue
 
-Sign in at `/admin`, choose the month, paste the newsletter text to fill in the
-dates, adjust the sections, upload the PDF and any event artwork, then **Preview**
-and **Publish**. Save as draft at any point; drafts are not visible to the public.
+Sign in at `/admin` and choose the month's Torch PDF. It fills in the month, the
+masthead verse, the dated events, and the sections, and keeps a copy of the PDF
+on file at the same time. Read through what it produced, fix anything wrong, add
+pictures if you want them, then **Preview** and **Publish**. Drafts are saved but
+not visible to the public.
+
+Turn on **Update as I type** in the preview and the page redraws as you work. It
+is drawn by the same code the website uses, so it is not an approximation.
+
+**What the import gets right, and what it does not.** On the August 2026 issue it
+found the month, the verse, all nine dated events, and four sections, and left
+the birthdays and anniversaries out. It does not fill in the featured item, and
+because the newsletter is laid out in two print columns some text lands in the
+wrong section: text from one column can be picked up under the previous column's
+heading. Headings set with drop caps can come back with the words run together
+("Roanokebaptist Schoolnews"). Treat the result as a first draft, not an answer.
+
+If a PDF will not read, there is a paste box under "Or paste the text instead"
+that runs the same parser over text copied out of the document.
 
 ## Security
 
