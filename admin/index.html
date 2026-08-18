@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <meta name="robots" content="noindex, nofollow">
+  <title>The Torch, Editor | Roanoke Baptist Church</title>
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="stylesheet" href="/admin/admin.css?v=1">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-inner">
+    <div class="bar-title">
+      <img src="/img/roanoke-baptist-church-logo.png" alt="">
+      <div>
+        <strong>The Torch</strong>
+        <span>Newsletter editor</span>
+      </div>
+    </div>
+    <div class="bar-right">
+      <span id="whoami" class="who">Checking sign in...</span>
+      <a href="/torch.html" target="_blank" rel="noopener">View the live page</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- ISSUE PICKER ------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Which issue</h2>
+    <div class="row">
+      <label class="field">
+        <span>Month</span>
+        <input type="month" id="issueMonth">
+        <small>This sets the issue name and its place in the archive.</small>
+      </label>
+      <label class="field">
+        <span>Issue name</span>
+        <input type="text" id="issueLabel" placeholder="August 2026">
+        <small>Shown on the masthead badge.</small>
+      </label>
+      <label class="field">
+        <span>Load a saved issue</span>
+        <select id="issueList"><option value="">Start a new issue</option></select>
+        <small>Drafts are saved but not visible to the public.</small>
+      </label>
+    </div>
+  </section>
+
+  <!-- PASTE HELPER ------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Start from the newsletter text <span class="opt">optional</span></h2>
+    <p class="help">Open the Torch document, select everything, copy, and paste it below. This fills in the dated events for you so you do not have to retype them. Check the result and fix anything it gets wrong.</p>
+    <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
+    <div class="actions">
+      <button type="button" class="btn" id="parseBtn">Fill in events from this text</button>
+      <span id="parseNote" class="note"></span>
+    </div>
+  </section>
+
+  <!-- MASTHEAD ----------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Masthead verse</h2>
+    <div class="row">
+      <label class="field grow">
+        <span>Verse</span>
+        <textarea id="verseText" rows="2" placeholder="Rooted and built up in him..."></textarea>
+      </label>
+      <label class="field">
+        <span>Reference</span>
+        <input type="text" id="verseRef" placeholder="Colossians 2:7">
+      </label>
+    </div>
+  </section>
+
+  <!-- FEATURE ------------------------------------------------------------ -->
+  <section class="panel">
+    <h2>Featured item <span class="opt">optional</span></h2>
+    <p class="help">The big highlighted block at the top, for the one thing you most want people to see this month.</p>
+    <div class="row">
+      <label class="field"><span>Small label above</span><input type="text" id="featKicker" placeholder="Missions Conference"></label>
+      <label class="field"><span>Title</span><input type="text" id="featTitle" placeholder="Heart For His Harvest"></label>
+      <label class="field"><span>When</span><input type="text" id="featWhen" placeholder="August 2-5, 2026"></label>
+    </div>
+    <label class="field grow"><span>Details</span><textarea id="featBody" rows="3"></textarea></label>
+    <div class="row">
+      <label class="field">
+        <span>Artwork</span>
+        <input type="file" id="featImage" accept="image/jpeg,image/png,image/webp">
+        <small>JPG, PNG, or WEBP, up to 5 MB.</small>
+      </label>
+      <div class="field"><span>&nbsp;</span><img id="featPreview" class="thumb" alt="" hidden></div>
+    </div>
+  </section>
+
+  <!-- EVENTS ------------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Upcoming events</h2>
+    <p class="help">These show as a dated list. They are the part of the newsletter that people search for, so it is worth getting the dates right.</p>
+    <div id="eventRows" class="rows"></div>
+    <button type="button" class="btn" id="addEvent">Add an event</button>
+  </section>
+
+  <!-- CARDS -------------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Sections</h2>
+    <p class="help">Each section becomes its own card on the page, like "RBC Teens" or "School News". Sections fill the two columns from the top down.</p>
+    <div id="cardList"></div>
+    <button type="button" class="btn" id="addCard">Add a section</button>
+  </section>
+
+  <!-- PDF ---------------------------------------------------------------- -->
+  <section class="panel">
+    <h2>The printed edition</h2>
+    <p class="help">Upload the month's PDF so the church has a copy on file. It is kept privately unless you tick the box below.</p>
+    <div class="row">
+      <label class="field">
+        <span>PDF file</span>
+        <input type="file" id="pdfFile" accept="application/pdf">
+        <small>Up to 15 MB. <span id="pdfCurrent"></span></small>
+      </label>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="pdfPublic">
+      <span>
+        <strong>Also publish this PDF for anyone to download</strong>
+        <small class="warn">Leave this off if the PDF contains birthdays, anniversaries, or any other member information. Anything published here can be read by anyone on the internet and found by Google.</small>
+      </span>
+    </label>
+  </section>
+
+  <!-- SAVE --------------------------------------------------------------- -->
+  <section class="panel sticky">
+    <div class="save-row">
+      <button type="button" class="btn" id="previewBtn">Preview</button>
+      <button type="button" class="btn" id="draftBtn">Save as draft</button>
+      <button type="button" class="btn btn-primary" id="publishBtn">Publish to the website</button>
+      <span id="saveNote" class="note"></span>
+    </div>
+  </section>
+
+  <section class="panel" id="previewPanel" hidden>
+    <h2>Preview</h2>
+    <iframe id="previewFrame" title="Preview of the Torch page"></iframe>
+  </section>
+
+</main>
+
+<!-- Privacy confirmation --------------------------------------------------- -->
+<div class="modal" id="privacyModal" hidden>
+  <div class="modal-box">
+    <h3>Check this before publishing</h3>
+    <p>This looks like it may contain personal information about church members:</p>
+    <ul id="privacyList"></ul>
+    <p>The website is public. Anyone can read it and search engines will index it. Member birthdays, anniversaries, and dates of birth should stay in the printed edition.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="privacyBack">Go back and remove it</button>
+      <button type="button" class="btn btn-quiet" id="privacyGo">I checked, publish anyway</button>
+    </div>
+  </div>
+</div>
+
+<script src="/admin/admin.js?v=1"></script>
+</body>
+</html>

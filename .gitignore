@@ -10,3 +10,18 @@ desktop.ini
 # preview_start only resolves C:\Git_Repos\.claude\launch.json, so site entries
 # belong in that root file instead.
 .claude/
+
+# Source newsletters. NEVER COMMIT THESE.
+#
+# This repository is public. The printed Torch carries a page of member
+# birthdays and anniversaries: roughly two dozen full names with dates. A PDF
+# committed here is as public as one posted on the website, and git keeps it in
+# the history even after a later delete. Issue PDFs belong in the R2 bucket,
+# uploaded through the admin page, where they stay private by default.
+*.pdf
+
+# Cloudflare
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*

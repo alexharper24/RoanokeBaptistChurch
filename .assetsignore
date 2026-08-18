@@ -1,0 +1,25 @@
+# Everything here stays out of the edge asset bundle.
+#
+# The asset directory is the repo root so that GitHub Pages keeps serving the
+# site unchanged until the DNS cutover. That means wrangler also watches its
+# own local state during `wrangler dev`, so .wrangler must be excluded or the
+# dev server reloads in a loop as D1 writes to disk.
+.wrangler/
+worker/
+node_modules/
+schema.sql
+wrangler.jsonc
+package.json
+package-lock.json
+README.md
+CLAUDE.md
+.github/
+.git/
+.claude/
+.assetsignore
+
+# Full-size photo originals are kept in git for safekeeping, not served.
+img/archive/
+
+# Source newsletters are uploaded to R2 by the admin, never served as files.
+*.pdf

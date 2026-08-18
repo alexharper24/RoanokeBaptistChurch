@@ -18,6 +18,13 @@ img/               All images, the logo, and the favicon
 sitemap.xml        Lists the pages for search engines
 robots.txt         Tells search engines they may index the site
 .nojekyll          Tells GitHub to serve the files exactly as-is
+
+admin/             The Torch editor for church staff (sign-in required)
+worker/            Cloudflare Worker: the Torch API and page rendering
+schema.sql         Database tables for the newsletter
+seed-2026-08.sql   The August 2026 issue, as first content
+wrangler.jsonc     Cloudflare configuration
+.assetsignore      Files that must not be published to the web
 ```
 
 Upload **everything in this folder** (including the `img` folder and the files that start with a dot). The most common go-live problem is uploading only the HTML and ending up with broken images.
@@ -71,6 +78,94 @@ To change wording or swap a photo, edit the file and re-upload it. Because styli
 - Three ministry cards (Children, Wednesday Kids' Clubs, Ladies' Fellowship) and the Missions card use an icon instead of a photo, and the Bus Ministry card currently shows a family portrait rather than a bus. Send real photos and I'll drop them in.
 - The welcome/building photo is low-resolution; a higher-resolution original would sharpen it.
 - The choir photo leads the "Life At Roanoke Baptist" gallery on **Our Church**, and the "Boldly Go!" flag display anchors a missions banner at the bottom of **Ministries**. Full-size originals are kept in `img/archive/`; the web copies in `img/` are resized to 1200px wide.
+- The Torch page now shows **August 2026**, transcribed from the printed PDF, minus the birthdays and anniversaries. Two graphics were lifted out of that PDF (`img/torch-2026-08-*.jpg`); the rest of its images are clip art and were left behind.
+- **Still to do before the editor is usable:** create the D1 database and R2 bucket, set up the Cloudflare Access application, and fill in the four `PASTE_...` placeholders in `wrangler.jsonc`. See "The Torch editor" above.
+- **Not yet decided:** the September 5 Steele/Bachman wedding was in the printed August issue but is left off the website, since it names private individuals on a page anyone can read. Add it back if the church would rather it were public.
+
+## The Torch editor (Cloudflare)
+
+The newsletter page is no longer hand-coded each month. Church staff sign in and
+publish it themselves. The rest of the site is unchanged and still plain files.
+
+### How it works
+
+`torch.html` ships with the latest issue written into it as ordinary HTML. When
+the site runs on Cloudflare, the Worker looks up the current issue and swaps that
+content in before the page reaches the visitor, so search engines see real text
+rather than something filled in afterwards by JavaScript. If the database is ever
+unreachable, the page falls back to the copy baked into the file. It cannot go
+blank.
+
+### A note on privacy
+
+**The printed Torch lists member birthdays and anniversaries. The website does
+not, and should not.** About two dozen full names with dates appear in the August
+2026 PDF. Publishing those puts real people's dates of birth on a public page that
+Google will index.
+
+Three things enforce this:
+
+1. There is no database column for personal celebration dates.
+2. The "fill in events from this text" button skips anything under a birthday or
+   anniversary heading, and says how many lines it left out.
+3. Publishing is blocked with a warning if the content still looks like a list of
+   names and dates. A person has to confirm before it will save.
+
+The uploaded PDF is kept privately by default for the church's own records. There
+is a checkbox to publish it for download, and it is off on purpose. Do not tick it
+while the PDF contains the birthday page.
+
+### First-time setup
+
+Run these once, from this folder, signed in with `wrangler login`:
+
+```bash
+npx wrangler d1 create roanoke-torch
+```
+
+Paste the returned `database_id` into `wrangler.jsonc`, then:
+
+```bash
+npx wrangler r2 bucket create roanoke-torch-files
+npm run db:init
+npm run seed
+npx wrangler deploy
+```
+
+Then create the Access application that guards the editor:
+
+1. Cloudflare dashboard, **Zero Trust > Access > Applications**, add a
+   self-hosted application covering `roanokebaptistonline.com/admin` and
+   `roanokebaptistonline.com/api/admin`.
+2. Policy: **Allow**, include the specific staff email addresses. A Gmail address
+   is fine. The one-time PIN login emails a code, so there is no password and no
+   account for anyone to create.
+3. Copy the application's **AUD** tag and your team name into `ACCESS_TEAM_DOMAIN`
+   and `ACCESS_AUD` in `wrangler.jsonc`, then deploy again.
+4. **Turn off the `workers.dev` route** for this Worker. Access protects the
+   custom domain; the workers.dev address would be a way around it. The Worker
+   also verifies the signed Access token on every admin request as a second line
+   of defence, but do both.
+
+Until steps 1 to 3 are done, `/admin` returns "sign in required" and refuses
+everything. That is the intended state, not a bug.
+
+### Running it locally
+
+```bash
+npm install
+npx wrangler dev --persist-to ../.wrangler-state/roanoke
+```
+
+`--persist-to` has to point outside this folder. The site files are served from
+the repository root, so Cloudflare's local database writes would otherwise look
+like edited files and the dev server would restart in a loop.
+
+### Publishing an issue
+
+Sign in at `/admin`, choose the month, paste the newsletter text to fill in the
+dates, adjust the sections, upload the PDF and any event artwork, then **Preview**
+and **Publish**. Save as draft at any point; drafts are not visible to the public.
 
 ## Security
 
