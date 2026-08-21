@@ -590,7 +590,20 @@ export async function handleAdminApi(request, env, url, actor) {
 
   if (path === '/api/admin/preview' && request.method === 'POST') {
     const body = await request.json();
-    return json({ html: renderIssue({ ...body, pdf_public: !!body.pdf_public }) });
+    // Point the preview's images at the admin file route. The public one only
+    // serves files belonging to a published issue, which is right for the live
+    // site but means a picture uploaded a moment ago 404s in the preview until
+    // the issue is published. The editor is already authenticated here, so the
+    // admin route serves it. Only src attributes are rewritten, so body text
+    // cannot be caught by this.
+    const html = renderIssue({ ...body, pdf_public: !!body.pdf_public })
+      .replace(/src="\/api\/torch\/file\//g, 'src="/api/admin/file/')
+      // The preview iframe is built with document.write, and lazy images never
+      // load in one: the browser's near-viewport check never marks them ready,
+      // so every picture stayed blank however long you waited. Load eagerly
+      // here. The real page keeps lazy loading.
+      .replace(/ loading="lazy"/g, '');
+    return json({ html });
   }
 
   return json({ error: 'Unknown endpoint.' }, 404);
