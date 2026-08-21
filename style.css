@@ -240,6 +240,14 @@ a { color: inherit; }
 /* Full container width, so it lines up with the two columns below it. */
 .torch-feature { background: var(--navy); color: #fff; border-radius: 14px; padding: 36px; text-align: center; margin: 0 auto 8px; }
 .torch-feature .section-label { color: var(--gold-light); }
+/* With artwork, run the block two up so the image is not marooned in the middle
+   of a wide dark band. The image column is capped near the artwork's own size:
+   these come out of the print PDF around 470px and enlarging them goes soft. */
+.torch-feature.has-art { display: grid; grid-template-columns: minmax(0, 460px) 1fr; gap: 36px; align-items: center; text-align: left; padding: 32px 36px; }
+.torch-feature.has-art .feature-art { display: flex; justify-content: center; }
+.torch-feature.has-art .torch-feature-img { max-width: 100%; margin: 0; border-radius: 12px; }
+.torch-feature.has-art .feature-text p { margin-left: 0; margin-right: 0; max-width: none; }
+.torch-feature.has-art h3 { font-size: 2rem; }
 .torch-feature h3 { color: #fff; font-size: 1.9rem; margin-bottom: 6px; }
 .torch-feature .when { color: var(--gold-light); font-weight: 600; margin-bottom: 12px; }
 .torch-feature p { color: #ededed; max-width: 560px; margin: 0 auto; line-height: 1.6; }
@@ -350,6 +358,8 @@ a { color: inherit; }
   .nav-desktop { display: none; }
   .hamburger { display: block; }
   .two-col, .sched-grid, .visit-grid, .pastor-grid, .focus-banner, .torch-grid { grid-template-columns: 1fr; }
+  .torch-feature.has-art { grid-template-columns: 1fr; gap: 20px; text-align: center; padding: 26px 22px; }
+  .torch-feature.has-art .feature-text p { margin-left: auto; margin-right: auto; }
   .focus-banner .focus-img { min-height: 220px; }
   .staff-grid { grid-template-columns: repeat(2, 1fr); }
   .min-grid { grid-template-columns: repeat(2, 1fr); }

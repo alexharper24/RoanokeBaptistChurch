@@ -288,18 +288,23 @@ export function renderIssue(issue, opts = {}) {
 
   const featureSrc = imageSrc(issue.feature_image);
 
+  // With artwork the block runs two up, image beside the words. Centring a
+  // 471px graphic in a 1052px band left it marooned in dark space, and the
+  // source is too small to enlarge without going soft. Without artwork the
+  // block stays centred as before.
   const feature = issue.feature_title
-    ? `<div class="torch-feature">` +
+    ? `<div class="torch-feature${featureSrc ? ' has-art' : ''}">` +
       (featureSrc
-        ? `<img class="torch-feature-img" src="${esc(featureSrc)}" alt="${esc(
+        ? `<div class="feature-art"><img class="torch-feature-img" src="${esc(featureSrc)}" alt="${esc(
             issue.feature_title
-          )}" loading="lazy">`
+          )}" loading="lazy"></div>`
         : '') +
+      `<div class="feature-text">` +
       (issue.feature_kicker ? `<span class="section-label">${escCopy(issue.feature_kicker)}</span>` : '') +
       `<h3>${escCopy(issue.feature_title)}</h3>` +
       (issue.feature_when ? `<p class="when">${escCopy(issue.feature_when)}</p>` : '') +
       (issue.feature_body ? `<p>${escCopy(issue.feature_body)}</p>` : '') +
-      `</div>`
+      `</div></div>`
     : '';
 
   const pdf =
