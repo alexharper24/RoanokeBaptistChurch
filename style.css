@@ -90,7 +90,10 @@ a { color: inherit; }
 /* Photo hero. The building sits behind a translucent scrim rather than being
    dimmed in the file itself, so the same photo stays usable elsewhere and the
    text keeps its contrast over the bright sky at the top of the frame. */
-.hero-photo { min-height: min(64vh, 560px); padding: 72px 24px 80px; }
+/* Tall enough to own the first screen, short enough that the section below
+   shows as a peek rather than being hidden. Sticky header is ~78px, so this
+   leaves roughly a tenth of the viewport for the next section. */
+.hero-photo { min-height: min(82vh, 860px); padding: 96px 24px 104px; }
 .hero-photo .hero-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 62%; z-index: 0; }
 /* Scrim depth is set by measurement, not taste. Sampling the composited
    pixels behind each line: at 0.78/0.62/0.82 the gold eyebrow came out at
@@ -166,10 +169,14 @@ a { color: inherit; }
 .staff-card .staff-body { padding: 16px 18px; }
 .staff-photo { width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; object-position: center; display: block; border-bottom: 1px solid #e6dfcd; }
 .pastor-photo img.pastor-pic { width: 100%; height: auto; display: block; border-radius: 12px; }
-.min-photo { width: 100%; height: 175px; object-fit: cover; object-position: center 30%; display: block; border-bottom: 1px solid #e6dfcd; }
-.gallery-photo { width: 100%; height: 232px; object-fit: cover; object-position: center 32%; display: block; border-radius: 12px; grid-column: span 2; }
-.gallery-photo.big { grid-column: span 3; height: 300px; }
-.gallery-photo.wide { grid-column: 1 / -1; height: 380px; }
+/* Ratios, not fixed pixel heights. With a fixed height these grew wider as the
+   page widened but stayed the same height, so the crop deepened: the ministry
+   photos were losing 51% of a square source and the gallery lead 66%. An
+   aspect-ratio grows the height with the width, so the crop stays put. */
+.min-photo { width: 100%; aspect-ratio: 4 / 3; height: auto; object-fit: cover; object-position: center 30%; display: block; border-bottom: 1px solid #e6dfcd; }
+.gallery-photo { width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; object-position: center 32%; display: block; border-radius: 12px; grid-column: span 2; }
+.gallery-photo.big { grid-column: span 3; aspect-ratio: 16 / 10; }
+.gallery-photo.wide { grid-column: 1 / -1; aspect-ratio: 12 / 5; }
 .staff-card h4 { font-size: 1.1rem; }
 .staff-card .role { color: var(--gold-ink); font-weight: 600; font-size: 0.88rem; margin-bottom: 8px; }
 .staff-card p { font-size: 0.9rem; color: var(--text-light); }
@@ -394,7 +401,7 @@ a { color: inherit; }
   .staff-grid { grid-template-columns: repeat(2, 1fr); }
   .min-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid { grid-template-columns: 1fr; }
-  .gallery-photo, .gallery-photo.big, .gallery-photo.wide { grid-column: 1 / -1; height: 220px; }
+  .gallery-photo, .gallery-photo.big, .gallery-photo.wide { grid-column: 1 / -1; aspect-ratio: 3 / 2; height: auto; }
   .hero { padding: 32px 18px 40px; }
   .hero-content p { font-size: 1.02rem; }
   .section { padding: 34px 0; }

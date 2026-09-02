@@ -3,13 +3,15 @@
    inverts uncontrolled pages into unreadable dark-on-dark). */
 :root {
   color-scheme: light only;
-  --navy: #16244d;
-  --brand: #8c0104;
-  --gold: #c9a24a;
+  /* Same brand kit as the public site, so the editor's preview sits in a
+     matching frame rather than the old palette. */
+  --navy: #000000;
+  --brand: #8B0000;
+  --gold: #C49D14;
   --ink: #23252b;
   --muted: #5f636e;
   --line: #dfd9cd;
-  --cream: #faf7f1;
+  --cream: #F6F2E7;
   --white: #fff;
   --warn: #8a4b00;
   --warn-bg: #fff6e6;
