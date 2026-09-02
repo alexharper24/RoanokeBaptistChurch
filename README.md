@@ -76,6 +76,45 @@ GitHub Pages keeps no visitor logs. To see traffic, create a free Google Analyti
 
 To change wording or swap a photo, edit the file and re-upload it. Because styling lives in `style.css` and behavior in `main.js`, a look-and-feel change is made once and applies to every page. Send the change to me and I'll hand back the updated files.
 
+## Brand colours and the one deliberate departure
+
+The site uses the church brand kit: **#8B0000** red, **#C49D14** gold,
+**#000000** black, **#F6F2E7** ivory, set in **Lora**.
+
+Every colour pairing was measured against the WCAG AA minimum (4.5:1 for body
+text, 3:1 for large text). All of them pass except one:
+
+| Pairing | Ratio | Verdict |
+|---|---|---|
+| Black on ivory | 18.77 | passes |
+| Red on ivory | 8.95 | passes |
+| Ivory on red | 8.95 | passes |
+| Gold on black | 8.18 | passes |
+| **Gold as text on ivory** | **2.30** | **fails, needs 4.5** |
+| **Gold as text on white** | **2.57** | **fails, needs 4.5** |
+
+**#C49D14 cannot be used for text on a light background.** It is roughly half
+the required contrast and would be hard to read for anyone, not only people
+with low vision.
+
+So the gold is used exactly as a gold should be: fills, rules, icons, borders,
+and text on the black. Where gold *text* is wanted on a light ground, the site
+uses **#81670D** instead. That is the same hue (46.7 degrees) taken down in
+lightness until it clears: 4.84 on the ivory, 5.41 on white. Side by side it
+reads as the same gold, a little deeper.
+
+Please do not "fix" these back to #C49D14. The brand colour is intact
+everywhere it works.
+
+One more measured decision: the home page hero puts text over a photo. The
+scrim behind it is set to the depth where the gold eyebrow reaches 5.19:1
+against the brightest part of the sky. At the first value it was 3.88:1, which
+fails.
+
+**Grimpt Brush**, the script face in the brand kit, is not a web font and is
+not loaded. It already appears inside the logo artwork, which is how it
+reaches the page.
+
 ## A couple of honest notes
 
 - The **Give** button opens a simple on-page note with the Zelle address. A static site can't process payments directly; if you want a real online-giving button later, link out to a provider.
