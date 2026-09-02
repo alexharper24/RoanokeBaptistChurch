@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Roanoke Baptist Church website and the Torch newsletter editor",
   "scripts": {
+    "test": "node test.mjs",
     "setup": "node setup.mjs",
     "dev": "wrangler dev --persist-to ../.wrangler-state/roanoke",
     "deploy": "wrangler deploy",

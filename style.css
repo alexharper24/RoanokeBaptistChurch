@@ -19,6 +19,10 @@
   --text: #2a1f1f;        /* warm near-black */
   --text-light: #6b5757;  /* warm gray */
   --white: #ffffff;
+  /* Page width standard shared with the other sites here. The wider container
+     is for photos, galleries and the newsletter grid; prose is capped
+     separately at ~70ch below, or the lines get too long to read. */
+  --maxw: 1560px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -27,13 +31,19 @@ h1, h2, h3, h4 { font-family: 'Lora', serif; line-height: 1.25; color: var(--nav
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.container { width: min(94%, var(--maxw)); margin-inline: auto; }
 .section { padding: 44px 0; background: var(--white); }
 .section-alt { background: var(--cream); }
 .section-header { text-align: center; margin-bottom: 36px; }
 .section-label { color: #896e32; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; }
 .section-header h2 { font-size: 2rem; }
 .section-header h2 span.underline { border-bottom: 3px solid var(--gold); padding-bottom: 4px; }
+
+/* Line length. The container is wide for imagery; running body copy still has
+   to stay near 70 characters or it becomes hard to track from line to line. */
+.welcome-text p, .intro-text, .pastor-bio p, .visit-box li .ct-val,
+.belief-section p, .belief-section li, .gospel-step p, .sof-item p { max-width: 70ch; }
+.intro-text { margin-inline: auto; }
 
 /* Buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-family: 'Source Sans 3', sans-serif; text-decoration: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; font-size: 1rem; }
@@ -48,7 +58,7 @@ a { color: inherit; }
 
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 100; background: var(--white); box-shadow: 0 1px 8px rgba(0,0,0,0.08); }
-.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; max-width: 1240px; margin: 0 auto; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; width: min(94%, var(--maxw)); margin-inline: auto; }
 .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
 .brand-mark { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
 .brand-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -74,6 +84,14 @@ a { color: inherit; }
 /* Hero */
 .hero { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; overflow: hidden; padding: 48px 24px 56px; }
 .hero-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1a1a1c 0%, #2a2a2e 100%); z-index: 0; }
+
+/* Photo hero. The building sits behind a translucent scrim rather than being
+   dimmed in the file itself, so the same photo stays usable elsewhere and the
+   text keeps its contrast over the bright sky at the top of the frame. */
+.hero-photo { min-height: min(64vh, 560px); padding: 72px 24px 80px; }
+.hero-photo .hero-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 62%; z-index: 0; }
+.hero-photo .hero-bg { background: linear-gradient(180deg, rgba(16,16,18,0.78) 0%, rgba(16,16,18,0.62) 45%, rgba(16,16,18,0.82) 100%); z-index: 1; }
+.hero-title { color: #fff; font-size: clamp(2.2rem, 5vw, 3.4rem); margin-bottom: 14px; text-shadow: 0 2px 18px rgba(0,0,0,0.45); }
 .hero-content { position: relative; z-index: 2; max-width: 1000px; width: 100%; }
 .hero-content .eyebrow { color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; font-size: 0.85rem; margin-bottom: 20px; }
 .hero-banner { width: 100%; max-width: 960px; border-radius: 14px; box-shadow: 0 14px 44px rgba(0,0,0,0.45); margin: 0 auto 26px; }
@@ -225,6 +243,12 @@ a { color: inherit; }
 .sof-close .r { color: var(--brand); font-weight: 600; display: block; margin-bottom: 18px; }
 
 /* The Torch newsletter */
+/* The newsletter is dense prose, so it does not take the wide container. At
+   1490px its cards ran about 139 characters a line, roughly double a readable
+   measure. This is the width the column balancer in worker/torch.js is
+   calibrated against; changing it means re-measuring those constants. */
+#torchPage .container { width: min(94%, 1052px); }
+
 .torch-mast { text-align: center; max-width: 760px; margin: 0 auto 26px; }
 .torch-flame { display: block; width: 46px; height: 46px; margin: 0 auto 14px; filter: drop-shadow(0 3px 7px rgba(140,1,4,0.3)); }
 .torch-issue { display: inline-block; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%); color: #fff; font-family: 'Source Sans 3', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.95rem; padding: 11px 30px; border-radius: 30px; box-shadow: 0 6px 18px rgba(140,1,4,0.35); margin-bottom: 20px; border: 2px solid var(--gold-light); }
