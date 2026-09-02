@@ -106,10 +106,13 @@ a { color: inherit; }
    profile puts it at 5.19 and still shows the building. */
 .hero-photo .hero-bg { background: linear-gradient(180deg, rgba(16,16,18,0.84) 0%, rgba(16,16,18,0.72) 45%, rgba(16,16,18,0.86) 100%); z-index: 1; }
 .hero-title { color: #fff; font-size: clamp(2.2rem, 5vw, 3.4rem); margin-bottom: 14px; text-shadow: 0 2px 18px rgba(0,0,0,0.45); }
-.hero-content { position: relative; z-index: 2; max-width: 1000px; width: 100%; }
+/* Same tier as the widened bands below it, so the top of the page is not
+   visibly narrower than the section that follows. The copy keeps its own cap:
+   the container governs the block, not the line length. */
+.hero-content { position: relative; z-index: 2; max-width: var(--maxw-wide); width: 100%; }
 .hero-content .eyebrow { color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; font-size: 0.85rem; margin-bottom: 20px; }
 .hero-banner { width: 100%; max-width: 960px; border-radius: 14px; box-shadow: 0 14px 44px rgba(0,0,0,0.45); margin: 0 auto 26px; }
-.hero-content p { font-size: 1.15rem; margin-bottom: 26px; color: #f0f0f0; max-width: 640px; margin-left: auto; margin-right: auto; }
+.hero-content p { font-size: 1.15rem; margin-bottom: 26px; color: #f0f0f0; max-width: 760px; margin-left: auto; margin-right: auto; }
 .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
 /* Service strip */
@@ -147,6 +150,23 @@ a { color: inherit; }
 /* Schedule + events */
 .sched-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
 .col-head { font-size: 1.4rem; margin-bottom: 18px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
+
+/* Weekly Services and Regular Events are two independent stacks, so a row that
+   wrapped to two lines on one side pushed everything below it out of step with
+   the other side. Subgrid makes both columns share one set of row heights, so
+   card 3 lines up with card 3 whatever the copy does. Each column is expected
+   to hold a heading plus four rows; an extra row would simply fall outside the
+   shared tracks rather than break the layout. */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 901px) {
+    .sched-grid { grid-template-rows: repeat(5, auto); row-gap: 14px; }
+    .sched-grid > div { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; gap: 0; }
+    /* Grid blockifies an inline-block child, which would stretch the gold rule
+       across the whole column instead of under the words. */
+    .sched-grid > div > .col-head { justify-self: start; margin-bottom: 4px; }
+    .sched-grid > div > .event-item { margin-bottom: 0; }
+  }
+}
 .event-item { display: flex; gap: 16px; background: var(--white); border: 1px solid #e6dfcd; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; align-items: flex-start; }
 .section-alt .event-item { background: var(--white); }
 .day-badge { background: var(--navy); color: #fff; border-radius: 8px; padding: 8px 12px; text-align: center; flex-shrink: 0; min-width: 64px; }
@@ -220,7 +240,10 @@ a { color: inherit; }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 20px; text-align: center; font-size: 0.85rem; color: #909090; }
 
 /* Page banner (interior pages) */
+/* The band itself is already edge to edge; this is the text block inside it,
+   matched to the hero and to the wide sections. */
 .page-banner { background: var(--navy); color: #fff; text-align: center; padding: 40px 24px; }
+.page-banner > * { max-width: var(--maxw-wide); margin-inline: auto; }
 .page-banner .section-label { color: var(--gold-light); }
 .page-banner h1 { color: #fff; font-size: 2.4rem; }
 
@@ -275,6 +298,10 @@ details.sof-item > .belief-head:focus-visible { outline: 3px solid var(--gold-in
 /* Quiet when shut: the gold rule marks the article that is actually open. */
 details.sof-item:not([open]) > .belief-head { border-bottom-color: transparent; }
 details.sof-item > .sof-body { padding: 18px 22px 22px; }
+/* The article number reads first and the titles start on a common left edge,
+   so the sixteen rows scan as a numbered list. "Article 16" sets the width. */
+details.sof-item > .belief-head > .head-label { flex: 0 0 auto; min-width: 104px; padding-right: 14px; border-right: 2px solid var(--gold); }
+details.sof-item > .belief-head > h3 { flex: 1 1 auto; }
 /* Chevron, drawn rather than a glyph so it inherits the brand red. */
 details.sof-item > .belief-head::after { content: ""; flex: 0 0 auto; margin-left: auto; width: 10px; height: 10px; border-right: 2.5px solid var(--brand); border-bottom: 2.5px solid var(--brand); transform: translateY(-3px) rotate(45deg); transition: transform 0.2s ease; }
 details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate(-135deg); }
@@ -454,6 +481,8 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 }
 
 @media (max-width: 560px) {
+  /* A 104px number column out of a 323px row leaves the titles too narrow. */
+  details.sof-item > .belief-head > .head-label { min-width: 0; padding-right: 10px; }
   .staff-grid { grid-template-columns: 1fr; }
   .min-grid { grid-template-columns: 1fr; }
   .names-cols { columns: 1; }
