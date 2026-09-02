@@ -233,10 +233,8 @@ a { color: inherit; }
 .verse-expanded { background: var(--cream); border-left: 3px solid var(--gold); padding: 14px 16px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text); }
 .verse-expanded strong { color: var(--navy); }
 
-/* The gospel page is a five step argument, so the grid runs left to right and
-   the steps stay in order. */
-.gospel-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
-.gospel-list > .gospel-section { margin-bottom: 0; }
+/* Same treatment: the five steps run straight down the page. */
+.gospel-list { max-width: 860px; margin-inline: auto; }
 
 .gospel-cta { background: var(--navy) !important; color: #fff; border-radius: 14px; padding: 40px; text-align: center; margin-top: 12px; }
 .gospel-cta h3 { color: #fff; font-size: 1.7rem; margin-bottom: 12px; }
@@ -246,13 +244,9 @@ a { color: inherit; }
 .intro-text { max-width: 720px; margin: 0 auto 36px; text-align: center; color: var(--text-light); font-size: 1.08rem; }
 
 /* Statement of Faith */
-/* Two columns at the full page width. A single column of text cards either
-   floats narrow inside a wide page or, if stretched to fill it, runs to about
-   150 characters a line. Two columns use the width and keep each line near 60.
-   Grid rather than CSS columns, so an article is never split down the middle
-   and the order reads left to right. */
-.sof-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
-.sof-list > .sof-item { margin-bottom: 0; }
+/* One column, read top to bottom, centred in the page. Held to 860px because
+   a text card spanning the full 1180 puts lines near 150 characters. */
+.sof-list { max-width: 860px; margin-inline: auto; }
 .sof-item { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 22px; margin-bottom: 16px; overflow: hidden; }
 .sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--gold); }
 .sof-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 700; font-size: 1.02rem; border: 2px solid var(--gold-light); }
@@ -426,7 +420,6 @@ a { color: inherit; }
   .staff-grid { grid-template-columns: 1fr; }
   .min-grid { grid-template-columns: 1fr; }
   .names-cols { columns: 1; }
-  .sof-list, .gospel-list { grid-template-columns: 1fr; }
 }
 
 @media (prefers-color-scheme: dark) {
