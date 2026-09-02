@@ -25,6 +25,11 @@
      specified and sits close to the original 1100. The hero is deliberately
      full-bleed and ignores this. Reading-heavy pages narrow further below. */
   --maxw: 1180px;
+  /* A second, wider tier. Only the homepage bands that carry photography use
+     it: an image has no line length to blow out, so it can take the extra
+     width, while a column of running copy at 1400 cannot. Sections that are
+     purely text (When We Gather, Plan Your Visit) stay at --maxw. */
+  --maxw-wide: 1400px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -34,6 +39,7 @@ img { max-width: 100%; display: block; }
 a { color: inherit; }
 
 .container { width: min(94%, var(--maxw)); margin-inline: auto; }
+.container.wide { width: min(94%, var(--maxw-wide)); }
 .section { padding: 44px 0; background: var(--white); }
 .section-alt { background: var(--cream); }
 .section-header { text-align: center; margin-bottom: 36px; }
@@ -184,7 +190,11 @@ a { color: inherit; }
 .staff-card p { font-size: 0.9rem; color: var(--text-light); }
 
 /* Visit + contact */
-.visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+/* align-items:start, not the grid default of stretch. Contact & Location has
+   four short rows against What To Expect's four paragraphs, so stretching it to
+   match left roughly 150px of empty card below the last row. Each card now ends
+   where its content ends. */
+.visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
 .visit-box { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 30px; }
 .visit-box h3 { font-size: 1.4rem; margin-bottom: 16px; }
 .visit-box ul { list-style: none; }
@@ -216,16 +226,19 @@ a { color: inherit; }
 
 /* Beliefs / gospel cards */
 .belief-section { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 22px; margin-bottom: 16px; overflow: hidden; }
-.belief-head { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: var(--navy); margin: -22px -22px 18px; padding: 14px 22px; border-bottom: 3px solid var(--gold); }
+/* Header band. This was solid black, and sixteen of them stacked down the
+   Statement of Faith made the page read as dark. Ivory one step down from the
+   card, with the article label in brand red (8.1:1 here, where the gold ink
+   only manages 4.38 against the 4.5 minimum) and gold kept as the rule. */
+.belief-head { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: var(--warm-gray); margin: -22px -22px 18px; padding: 14px 22px; border-bottom: 3px solid var(--gold); }
 .icon-square { width: 44px; height: 44px; border-radius: 9px; background: var(--navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .icon-square svg { width: 24px; height: 24px; color: #fff; }
 .icon-square.red { background: var(--brand-bright); }
 .icon-square.gray { background: #5a5a5a; }
 .icon-square.green { background: #2f8f5b; }
-.belief-head h3 { font-size: 1.3rem; color: #fff; font-weight: 700; }
-.head-label { color: var(--gold-light); font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.08em; }
-.belief-head .icon-square { box-shadow: 0 0 0 2px rgba(226,196,123,0.5); }
-.belief-head .icon-square:not(.red):not(.gray):not(.green) { background: rgba(255,255,255,0.12); }
+.belief-head h3 { font-size: 1.3rem; color: var(--navy); font-weight: 700; }
+.head-label { color: var(--brand); font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.08em; }
+.belief-head .icon-square { box-shadow: 0 0 0 2px rgba(196,157,20,0.55); }
 .belief-section p { color: var(--text); margin-bottom: 12px; }
 .scripture { display: inline-block; background: var(--warm-gray); color: var(--navy); border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px 6px 4px 0; cursor: pointer; transition: all 0.2s; border: 1px solid #e2dcce; }
 .scripture:hover { background: var(--gold); color: var(--navy); }
@@ -248,6 +261,30 @@ a { color: inherit; }
    a text card spanning the full 1180 puts lines near 150 characters. */
 .sof-list { max-width: 860px; margin-inline: auto; }
 .sof-item { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 22px; margin-bottom: 16px; overflow: hidden; }
+
+/* Accordion. Each article is a native <details>, collapsed by default: sixteen
+   full articles opened at once is a wall of text nobody scrolls. Native means
+   no JS, keyboard operable for free, and find-in-page still opens the match in
+   current browsers. The card drops its own padding because the summary has to
+   run edge to edge to be a real target. */
+details.sof-item { padding: 0; }
+details.sof-item > .belief-head { margin: 0; cursor: pointer; list-style: none; user-select: none; }
+details.sof-item > .belief-head::-webkit-details-marker { display: none; }
+details.sof-item > .belief-head:hover { background: #e3ddcc; }
+details.sof-item > .belief-head:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: -3px; }
+/* Quiet when shut: the gold rule marks the article that is actually open. */
+details.sof-item:not([open]) > .belief-head { border-bottom-color: transparent; }
+details.sof-item > .sof-body { padding: 18px 22px 22px; }
+/* Chevron, drawn rather than a glyph so it inherits the brand red. */
+details.sof-item > .belief-head::after { content: ""; flex: 0 0 auto; margin-left: auto; width: 10px; height: 10px; border-right: 2.5px solid var(--brand); border-bottom: 2.5px solid var(--brand); transform: translateY(-3px) rotate(45deg); transition: transform 0.2s ease; }
+details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate(-135deg); }
+
+/* Expand all / collapse all. Sixteen clicks to read the statement straight
+   through is not a reasonable ask of someone who came to read it. */
+.sof-tools { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.sof-toggle-all { font: inherit; font-size: 0.9rem; font-weight: 600; color: var(--brand); background: var(--white); border: 1px solid #e6dfcd; border-radius: 8px; padding: 11px 18px; min-height: 44px; cursor: pointer; }
+.sof-toggle-all:hover { background: var(--warm-gray); }
+
 .sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--gold); }
 .sof-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 700; font-size: 1.02rem; border: 2px solid var(--gold-light); }
 .sof-head h3 { color: #fff; font-size: 1.2rem; margin: 0; line-height: 1.25; }
@@ -437,6 +474,16 @@ a { color: inherit; }
   .verse-expanded { background-color: var(--cream) !important; }
   .scripture { background-color: var(--warm-gray) !important; color: var(--navy) !important; }
   .scripture.verse-active { background-color: var(--brand) !important; color: #fff !important; }
+}
+
+/* Printing a doctrine page must not depend on what the reader happened to have
+   open. Force every article open, and drop the chrome that wastes ink. */
+@media print {
+  details.sof-item > .sof-body { display: block !important; }
+  details.sof-item > .belief-head::after { display: none; }
+  .sof-tools, .site-header, .mobile-nav, .hamburger { display: none !important; }
+  .belief-head { background: transparent !important; border-bottom: 2px solid #999; }
+  .sof-item, .belief-section { break-inside: avoid; box-shadow: none; }
 }
 
 /* Anchor offset so the sticky header does not cover linked sections */
