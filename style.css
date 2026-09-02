@@ -43,8 +43,7 @@ a { color: inherit; }
 
 /* Line length. The container is wide for imagery; running body copy still has
    to stay near 70 characters or it becomes hard to track from line to line. */
-.welcome-text p, .intro-text, .pastor-bio p, .visit-box li .ct-val,
-.belief-section p, .belief-section li, .gospel-step p, .sof-item p { max-width: 70ch; }
+.welcome-text p, .intro-text, .pastor-bio p, .visit-box li .ct-val { max-width: 70ch; }
 .intro-text { margin-inline: auto; }
 
 /* Buttons */
@@ -155,9 +154,10 @@ a { color: inherit; }
 .gallery-grid .placeholder-photo { min-height: 220px; }
 
 /* Pastor */
-/* Centred as a unit and held to a comfortable measure, rather than the photo
-   pinned left with the bio running the whole width of the page. */
-.pastor-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 44px; align-items: center; justify-content: center; max-width: 900px; margin-inline: auto; }
+/* Spans the same width as the staff row below it. The photo column grows with
+   it so the bio lands near its 70ch cap and fills its side, instead of a small
+   photo leaving a band of empty space down the right. */
+.pastor-grid { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 48px; align-items: center; }
 .pastor-photo { border-radius: 12px; overflow: hidden; }
 .pastor-photo .placeholder-photo { min-height: 360px; }
 .pastor-bio h3 { font-size: 1.7rem; margin-bottom: 4px; }
@@ -233,6 +233,11 @@ a { color: inherit; }
 .verse-expanded { background: var(--cream); border-left: 3px solid var(--gold); padding: 14px 16px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text); }
 .verse-expanded strong { color: var(--navy); }
 
+/* The gospel page is a five step argument, so the grid runs left to right and
+   the steps stay in order. */
+.gospel-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.gospel-list > .gospel-section { margin-bottom: 0; }
+
 .gospel-cta { background: var(--navy) !important; color: #fff; border-radius: 14px; padding: 40px; text-align: center; margin-top: 12px; }
 .gospel-cta h3 { color: #fff; font-size: 1.7rem; margin-bottom: 12px; }
 .gospel-cta p { color: #e6e6e6; margin-bottom: 22px; max-width: 560px; margin-left: auto; margin-right: auto; }
@@ -241,7 +246,13 @@ a { color: inherit; }
 .intro-text { max-width: 720px; margin: 0 auto 36px; text-align: center; color: var(--text-light); font-size: 1.08rem; }
 
 /* Statement of Faith */
-.sof-list { max-width: 860px; margin: 0 auto; }
+/* Two columns at the full page width. A single column of text cards either
+   floats narrow inside a wide page or, if stretched to fill it, runs to about
+   150 characters a line. Two columns use the width and keep each line near 60.
+   Grid rather than CSS columns, so an article is never split down the middle
+   and the order reads left to right. */
+.sof-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.sof-list > .sof-item { margin-bottom: 0; }
 .sof-item { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 22px; margin-bottom: 16px; overflow: hidden; }
 .sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--gold); }
 .sof-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 700; font-size: 1.02rem; border: 2px solid var(--gold-light); }
@@ -262,12 +273,6 @@ a { color: inherit; }
    1490px its cards ran about 139 characters a line, roughly double a readable
    measure. This is the width the column balancer in worker/torch.js is
    calibrated against; changing it means re-measuring those constants. */
-/* Pages that are a column of text read badly in a wide frame: the card
-   stretches while the paragraph inside stays at its 70ch cap, leaving a band
-   of empty card beside every line. At 940px that band was 119px. This is sized
-   so the text fills its card instead of floating in it. */
-#beliefsPage .container, #gospelPage .container { width: min(94%, 780px); }
-
 #torchPage .container { width: min(94%, 1052px); }
 
 .torch-mast { text-align: center; max-width: 760px; margin: 0 auto 26px; }
@@ -421,6 +426,7 @@ a { color: inherit; }
   .staff-grid { grid-template-columns: 1fr; }
   .min-grid { grid-template-columns: 1fr; }
   .names-cols { columns: 1; }
+  .sof-list, .gospel-list { grid-template-columns: 1fr; }
 }
 
 @media (prefers-color-scheme: dark) {
