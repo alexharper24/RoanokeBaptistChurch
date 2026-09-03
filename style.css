@@ -210,11 +210,13 @@ a { color: inherit; }
 .staff-card p { font-size: 0.9rem; color: var(--text-light); }
 
 /* Visit + contact */
-/* align-items:start, not the grid default of stretch. Contact & Location has
-   four short rows against What To Expect's four paragraphs, so stretching it to
-   match left roughly 150px of empty card below the last row. Each card now ends
-   where its content ends. */
-.visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+/* Two equal columns wasted the right-hand card: Contact & Location's longest
+   line is an email address at about 250px, sitting in a 510px content box, so
+   roughly half the card was empty to the right of every row. The split is
+   weighted to the side that actually has paragraphs, which takes the slack from
+   about 230px to 64 and leaves the email 303px to sit in before it would wrap.
+   Heights stay equal, which is the grid default. */
+.visit-grid { display: grid; grid-template-columns: 1.85fr 1fr; gap: 36px; }
 .visit-box { background: var(--white); border: 1px solid #e6dfcd; border-radius: 12px; padding: 30px; }
 .visit-box h3 { font-size: 1.4rem; margin-bottom: 16px; }
 .visit-box ul { list-style: none; }

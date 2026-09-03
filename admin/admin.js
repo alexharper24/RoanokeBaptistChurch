@@ -453,7 +453,7 @@ function upload(file, kind, slot) {
       doc.open();
       doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="stylesheet" href="/style.css?v=27"></head>' +
+        '<link rel="stylesheet" href="/style.css?v=28"></head>' +
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();
