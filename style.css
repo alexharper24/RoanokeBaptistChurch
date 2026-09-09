@@ -59,6 +59,24 @@ a { color: inherit; }
 /* Line length. The container is wide for imagery; running body copy still has
    to stay near 70 characters or it becomes hard to track from line to line. */
 .welcome-text p, .intro-text, .pastor-bio p, .visit-box li .ct-val { max-width: 70ch; }
+
+/* Orphans. Short card copy sets two or three lines, and greedy wrapping kept
+   dropping a single word onto the last one: "warmly.", "up.", "preaching.",
+   "children.", "them.", "Principal". text-wrap:balance evens the lines instead,
+   without changing how many there are. It only applies to a block container,
+   which is why the visit rows take it on the div and not on the .ct-val span
+   inside; and browsers stop balancing past a handful of lines, so this is
+   scoped to the blocks that really are short. The Torch is left out on purpose:
+   its column balancer in worker/torch.js is calibrated against measured card
+   heights, and re-wrapping cards there would invalidate those constants. */
+.visit-box li > div,
+.event-item .ev-body p,
+.min-card p,
+.staff-card p { text-wrap: balance; }
+
+/* Running prose is past the point where balance applies. pretty leaves the
+   wrapping alone and only reworks the last lines to avoid an orphan. */
+.welcome-text p, .pastor-bio p, .intro-text { text-wrap: pretty; }
 .intro-text { margin-inline: auto; }
 
 /* Buttons */
