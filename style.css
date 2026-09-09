@@ -15,6 +15,12 @@
      on the ivory, 5.41 on white. Use --gold for anything filled and for text
      on the black; use --gold-ink for gold text on light. */
   --gold-ink: #81670D;
+  /* The rule drawn under a heading. Brand red rather than gold as of
+     2026-09-09: 10.6:1 on white and 8.1:1 on the ivory, where the gold was a
+     pale 2.1 and read as a smudge rather than a line. Gold stays as fill,
+     icon, and accent colour, and stays on the Torch card headers, which sit
+     on a black band where red disappears. */
+  --rule: #8B0000;
   --teal: #1f6f62;        /* used sparingly on newsletter cards */
   --cream: #F6F2E7;       /* brand ivory */
   --warm-gray: #ece7d9;   /* ivory, one step down, for tinted panels */
@@ -45,7 +51,7 @@ a { color: inherit; }
 .section-header { text-align: center; margin-bottom: 36px; }
 .section-label { color: var(--gold-ink); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; }
 .section-header h2 { font-size: 2rem; }
-.section-header h2 span.underline { border-bottom: 3px solid var(--gold); padding-bottom: 4px; }
+.section-header h2 span.underline { border-bottom: 3px solid var(--rule); padding-bottom: 4px; }
 
 /* Line length. The container is wide for imagery; running body copy still has
    to stay near 70 characters or it becomes hard to track from line to line. */
@@ -149,7 +155,7 @@ a { color: inherit; }
 
 /* Schedule + events */
 .sched-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
-.col-head { font-size: 1.4rem; margin-bottom: 18px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
+.col-head { font-size: 1.4rem; margin-bottom: 18px; padding-bottom: 8px; border-bottom: 2px solid var(--rule); display: inline-block; }
 
 /* Weekly Services and Regular Events are two independent stacks, so a row that
    wrapped to two lines on one side pushed everything below it out of step with
@@ -221,7 +227,9 @@ a { color: inherit; }
 .visit-box h3 { font-size: 1.4rem; margin-bottom: 16px; }
 .visit-box ul { list-style: none; }
 .visit-box li { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
-.visit-box li svg { width: 22px; height: 22px; color: var(--gold); flex-shrink: 0; margin-top: 3px; }
+/* Brand red, matching the heading rules. Gold on white measured 2.57:1,
+   under the 3:1 WCAG minimum for a meaningful graphic; red is 10.6. */
+.visit-box li svg { width: 22px; height: 22px; color: var(--rule); flex-shrink: 0; margin-top: 3px; }
 .visit-box li .ct-label { font-weight: 600; color: var(--navy); display: block; }
 .visit-box li .ct-val { color: var(--text-light); }
 .visit-box li .ct-val a { color: var(--text-light); text-decoration: none; }
@@ -255,7 +263,7 @@ a { color: inherit; }
    Statement of Faith made the page read as dark. Ivory one step down from the
    card, with the article label in brand red (8.1:1 here, where the gold ink
    only manages 4.38 against the 4.5 minimum) and gold kept as the rule. */
-.belief-head { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: var(--warm-gray); margin: -22px -22px 18px; padding: 14px 22px; border-bottom: 3px solid var(--gold); }
+.belief-head { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: var(--warm-gray); margin: -22px -22px 18px; padding: 14px 22px; border-bottom: 3px solid var(--rule); }
 .icon-square { width: 44px; height: 44px; border-radius: 9px; background: var(--navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .icon-square svg { width: 24px; height: 24px; color: #fff; }
 .icon-square.red { background: var(--brand-bright); }
@@ -302,7 +310,7 @@ details.sof-item:not([open]) > .belief-head { border-bottom-color: transparent; 
 details.sof-item > .sof-body { padding: 18px 22px 22px; }
 /* The article number reads first and the titles start on a common left edge,
    so the sixteen rows scan as a numbered list. "Article 16" sets the width. */
-details.sof-item > .belief-head > .head-label { flex: 0 0 auto; min-width: 104px; padding-right: 14px; border-right: 2px solid var(--gold); }
+details.sof-item > .belief-head > .head-label { flex: 0 0 auto; min-width: 104px; padding-right: 14px; border-right: 2px solid var(--rule); }
 details.sof-item > .belief-head > h3 { flex: 1 1 auto; }
 /* Chevron, drawn rather than a glyph so it inherits the brand red. */
 details.sof-item > .belief-head::after { content: ""; flex: 0 0 auto; margin-left: auto; width: 10px; height: 10px; border-right: 2.5px solid var(--brand); border-bottom: 2.5px solid var(--brand); transform: translateY(-3px) rotate(45deg); transition: transform 0.2s ease; }
@@ -314,7 +322,7 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 .sof-toggle-all { font: inherit; font-size: 0.9rem; font-weight: 600; color: var(--brand); background: var(--white); border: 1px solid #e6dfcd; border-radius: 8px; padding: 11px 18px; min-height: 44px; cursor: pointer; }
 .sof-toggle-all:hover { background: var(--warm-gray); }
 
-.sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--gold); }
+.sof-head { display: flex; align-items: center; gap: 15px; background: var(--navy); padding: 14px 22px; border-bottom: 3px solid var(--rule); }
 .sof-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 700; font-size: 1.02rem; border: 2px solid var(--gold-light); }
 .sof-head h3 { color: #fff; font-size: 1.2rem; margin: 0; line-height: 1.25; }
 .sof-body { padding: 0; }
@@ -381,7 +389,7 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
    room inside each card reads as padding. */
 .torch-grid > div > .torch-card { flex-grow: 1; }
 .torch-grid > div > .torch-card { margin-bottom: 0; }
-.torch-col-head { font-size: 1.4rem; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
+.torch-col-head { font-size: 1.4rem; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--rule); display: inline-block; }
 .torch-card { background: var(--white); border: 1px solid #e2d9c4; border-radius: 12px; padding: 0 24px 20px; margin-bottom: 22px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); overflow: hidden; }
 .torch-card h4 { font-size: 1.12rem; color: #fff; background: var(--navy); margin: 0 -24px 16px; padding: 13px 24px; border-bottom: 3px solid var(--gold); }
 #torchPage .section { background: var(--cream); }
