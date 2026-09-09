@@ -89,6 +89,14 @@ a { color: inherit; }
 .btn-white:hover { background: var(--gold); border-color: var(--gold); color: var(--navy); }
 .btn-gold { background: var(--gold); color: var(--navy); border: 2px solid var(--gold); }
 .btn-gold:hover { background: var(--gold-light); border-color: var(--gold-light); }
+/* The Gospel button on the photo hero. Sampling the composited pixels around
+   it, the backdrop there is #33291d, the sunlit brick wall under the scrim.
+   The brand red reads 1.42:1 against that, so the button's own edge vanishes
+   even though the white label on it is a clean 10:1. A white border restores
+   the boundary at about 19:1 and pairs it with the solid white button beside
+   it. Scoped to the hero: the same button on a light ground needs nothing. */
+.hero .btn-primary { border-color: #fff; }
+.hero .btn-primary:hover { border-color: #fff; }
 
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 100; background: var(--white); box-shadow: 0 1px 8px rgba(0,0,0,0.08); }
@@ -143,10 +151,10 @@ a { color: inherit; }
 .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
 /* Service strip */
-.service-strip { background: var(--navy); color: #fff; padding: 18px 0; }
+.service-strip { background: var(--brand); color: #fff; padding: 18px 0; }
 .service-strip .container { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; text-align: center; }
 .service-strip .svc { display: flex; flex-direction: column; padding: 4px 18px; }
-.service-strip .svc .lbl { color: var(--gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.service-strip .svc .lbl { color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .service-strip .svc .time { font-weight: 600; font-size: 1.05rem; }
 .service-strip .divider { width: 1px; height: 34px; background: rgba(255,255,255,0.25); }
 
@@ -350,14 +358,13 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 .sof-body p { color: var(--text); margin-bottom: 10px; }
 .sof-refs { color: var(--brand) !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em; }
 .sof-refs-row { margin-top: 10px; }
-/* Inside a lettered sub-point the references trail the sentence, and as plain
-   inline content the line could break between two chips: "I Thessalonians 3:5"
-   stayed up with the text and "Matthew 4:13" dropped to the next line on its
-   own. An inline-block is atomic, so the group either fits after the sentence
-   or moves down entire. Left on the default baseline alignment, which renders
-   identically to the old inline behaviour when the group does fit. The margin
-   has to go, or the block sits 10px below the text it belongs to. */
-.sof-sub li .sof-refs-row { display: inline-block; margin-top: 0; }
+/* References sit on their own line under the sentence they support, starting
+   at the text's left edge. Trailing the sentence gave every point a different
+   starting position, and right-aligning only moves the rag to the other side
+   while stranding a lone reference a column away from four words of text. One
+   fixed left edge is what a printed statement of faith does. margin-top is 2,
+   not the class's 10: the chips carry 4px of their own. */
+.sof-sub li .sof-refs-row { display: block; margin-top: 2px; }
 .sof-sub { list-style: none; margin: 6px 0 4px; padding: 0; }
 .sof-sub li { position: relative; padding-left: 28px; margin-bottom: 9px; color: var(--text-light); font-size: 0.97rem; line-height: 1.55; }
 .sof-sub li .sub-mark { position: absolute; left: 0; top: 0; font-weight: 700; color: var(--brand); }
@@ -533,7 +540,8 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
   .section-alt { background-color: var(--cream) !important; }
   .belief-section, .visit-box, .event-item, .staff-card, .min-card, .modal-box, .photo-frame, .sof-item { background-color: #ffffff !important; }
   .site-header { background-color: #ffffff !important; }
-  .service-strip, .focus-banner .focus-text, .page-banner, .day-badge, .icon-square, .gospel-cta, .mobile-nav, .sof-head { background-color: var(--navy) !important; }
+  .focus-banner .focus-text, .page-banner, .day-badge, .icon-square, .gospel-cta, .mobile-nav, .sof-head { background-color: var(--navy) !important; }
+  .service-strip { background-color: var(--brand) !important; }
   .nav-cta { background-color: var(--brand) !important; }
   .icon-square.red { background-color: var(--brand-bright) !important; }
   .icon-square.gray { background-color: #5a5a5a !important; }
