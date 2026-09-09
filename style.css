@@ -294,7 +294,7 @@ a { color: inherit; }
 .head-label { color: var(--brand); font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.08em; }
 .belief-head .icon-square { box-shadow: 0 0 0 2px rgba(196,157,20,0.55); }
 .belief-section p { color: var(--text); margin-bottom: 12px; }
-.scripture { display: inline-block; background: var(--warm-gray); color: var(--navy); border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px 6px 4px 0; cursor: pointer; transition: all 0.2s; border: 1px solid #e2dcce; }
+.scripture { display: inline-block; background: var(--warm-gray); color: var(--navy); border-radius: 6px; padding: 5px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px 6px 4px 0; cursor: pointer; transition: all 0.2s; border: 1px solid #e2dcce; }
 .scripture:hover { background: var(--gold); color: var(--navy); }
 .scripture.verse-active { background: var(--brand); color: #fff; }
 .verse-expanded { background: var(--cream); border-left: 3px solid var(--gold); padding: 14px 16px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text); }
@@ -350,6 +350,14 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 .sof-body p { color: var(--text); margin-bottom: 10px; }
 .sof-refs { color: var(--brand) !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em; }
 .sof-refs-row { margin-top: 10px; }
+/* Inside a lettered sub-point the references trail the sentence, and as plain
+   inline content the line could break between two chips: "I Thessalonians 3:5"
+   stayed up with the text and "Matthew 4:13" dropped to the next line on its
+   own. An inline-block is atomic, so the group either fits after the sentence
+   or moves down entire. Left on the default baseline alignment, which renders
+   identically to the old inline behaviour when the group does fit. The margin
+   has to go, or the block sits 10px below the text it belongs to. */
+.sof-sub li .sof-refs-row { display: inline-block; margin-top: 0; }
 .sof-sub { list-style: none; margin: 6px 0 4px; padding: 0; }
 .sof-sub li { position: relative; padding-left: 28px; margin-bottom: 9px; color: var(--text-light); font-size: 0.97rem; line-height: 1.55; }
 .sof-sub li .sub-mark { position: absolute; left: 0; top: 0; font-weight: 700; color: var(--brand); }
