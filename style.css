@@ -540,3 +540,12 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 @media (max-width: 640px) {
   .ct-val a { display:inline-block; padding-top:10px; padding-bottom:10px; }
 }
+
+/* ---------- skip link ----------
+   Off-screen until focused, then a real button top-left. Pairs with the
+   <main id="main"> landmark: without both, a keyboard or screen-reader user
+   cannot bypass the header nav on any page (WCAG 2.1 SC 2.4.1, Level A). */
+.skip-link{position:absolute;left:-9999px;top:0;z-index:100;
+  background:#1f1d1b;color:#fff;font-weight:600;font-size:15px;
+  padding:12px 20px;border-radius:0 0 10px 0;text-decoration:none}
+.skip-link:focus{left:0}
