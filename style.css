@@ -473,7 +473,10 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
 /* Two pictures in one section, side by side. Each keeps its own aspect and
    takes half the row; the pair is what the September packet photos wanted. */
 .torch-card-pair { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 16px; }
-.torch-card-pair .torch-card-img { flex: 1 1 0; min-width: 0; width: calc(50% - 6px); margin: 0; }
+.torch-card-pair { justify-content: center; }
+/* Never stretch: a small picture blown up to half the card is the blur people
+   see. Each sits at its own size, capped at half the row. */
+.torch-card-pair .torch-card-img { flex: 0 1 auto; min-width: 0; width: auto; max-width: calc(50% - 6px); margin: 0; }
 .torch-pdf { text-align: center; margin: 22px 0 0; }
 .torch-pdf a { font-weight: 600; }
 .torch-empty { background: var(--cream); border: 1px solid #e2d9c4; border-radius: 12px; padding: 32px; text-align: center; }

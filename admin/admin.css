@@ -217,3 +217,6 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--line); border-radius
 .picfound p { margin-bottom: 10px; }
 /* Move up / down sit tight against the remove button. */
 .card-edit .card-head .mv { padding: 8px 10px; min-width: 40px; color: var(--navy); }
+
+/* A picture the PDF carries at print-downsampled size. */
+.pic small .soft { color: var(--warn); }

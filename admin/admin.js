@@ -601,7 +601,13 @@
       html += '<div class="pic' + (im.placed ? ' placed' : '') + '" data-pic-tile="' + i + '">' +
               '<img src="' + im.url + '" alt="' + esc(label) + '">' +
               '<strong' + (named ? '' : ' class="unnamed"') + '>' + esc(label) + '</strong>' +
-              '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>';
+              '<small>' + im.w + ' by ' + im.h + ', page ' + im.page +
+                // Phones draw at twice the CSS width, so a picture needs about 800px
+                // to fill a section sharply. The print PDF carries its artwork at
+                // 150 dpi, under half that. Say so here, while the original is easy
+                // to ask for, rather than after it is published.
+                (im.w < 800 ? ' &middot; <span class="soft">will look soft on phones; upload the original if there is one</span>' : '') +
+              '</small>';
       if (im.placed) {
         html += '<span class="placed-in">Placed in <b>' + esc(im.placed) + '</b></span>';
       } else {
