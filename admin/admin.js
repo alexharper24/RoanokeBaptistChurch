@@ -270,10 +270,20 @@
     });
   }
 
-  function readPdfText(file) {
+  function readPdf(file) {
+    var lib = null;
     return loadPdfJs()
-      .then(function (mod) { return file.arrayBuffer().then(function (buf) { return mod.getDocument({ data: buf }).promise; }); })
+      .then(function (mod) { lib = mod; return file.arrayBuffer(); })
+      .then(function (buf) { return lib.getDocument({ data: buf }).promise; })
       .then(function (doc) {
+        return readPdfText(doc).then(function (text) {
+          return readPdfImages(lib, doc).then(function (images) { return { text: text, images: images }; });
+        });
+      });
+  }
+
+  function readPdfText(doc) {
+    return Promise.resolve(doc).then(function (doc) {
         var pages = [];
         for (var n = 1; n <= doc.numPages; n++) pages.push(n);
         return Promise.all(pages.map(function (n) {
@@ -306,18 +316,184 @@
       });
   }
 
+  // A section laid out as a picture has no text layer at all, so the parser
+  // above cannot see it. The September 2026 issue lost two whole sections that
+  // way, the Kid's Choir and the Fall Program, because both were artwork. Pull
+  // the embedded pictures out too and let the editor place them.
+  //
+  // Anything under 60px on a side is page furniture: the staff name bars in the
+  // printed Torch measure about 100 by 32. Size cannot tell a QR code from a
+  // product photo, so everything above that is offered rather than guessed at,
+  // biggest first.
+  var MIN_PIC = 60;
+
+  function drawImage(img) {
+    var cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    var ctx = cv.getContext('2d');
+    if (img.bitmap) {
+      ctx.drawImage(img.bitmap, 0, 0);
+      return cv;
+    }
+    if (!img.data) return null;
+    // kind 1 = grey 1bpp, 2 = RGB 24bpp, 3 = RGBA 32bpp.
+    var out = ctx.createImageData(img.width, img.height);
+    var d = img.data;
+    var i, q;
+    if (img.kind === 3) {
+      out.data.set(d);
+    } else if (img.kind === 2) {
+      for (i = 0, q = 0; q + 2 < d.length; q += 3, i += 4) {
+        out.data[i] = d[q];
+        out.data[i + 1] = d[q + 1];
+        out.data[i + 2] = d[q + 2];
+        out.data[i + 3] = 255;
+      }
+    } else {
+      var rowBytes = (img.width + 7) >> 3;
+      for (var y = 0; y < img.height; y++) {
+        for (var x = 0; x < img.width; x++) {
+          var v = (d[y * rowBytes + (x >> 3)] >> (7 - (x & 7))) & 1 ? 255 : 0;
+          i = (y * img.width + x) * 4;
+          out.data[i] = v;
+          out.data[i + 1] = v;
+          out.data[i + 2] = v;
+          out.data[i + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(out, 0, 0);
+    return cv;
+  }
+
+  function readPdfImages(lib, doc) {
+    var pages = [];
+    for (var n = 1; n <= doc.numPages; n++) pages.push(n);
+    return Promise.all(pages.map(function (n) {
+      return doc.getPage(n).then(function (page) {
+        return page.getOperatorList().then(function (ops) {
+          var wanted = [];
+          for (var i = 0; i < ops.fnArray.length; i++) {
+            if (ops.fnArray[i] !== lib.OPS.paintImageXObject && ops.fnArray[i] !== lib.OPS.paintJpegXObject) continue;
+            var id = ops.argsArray[i][0];
+            if (typeof id === 'string' && wanted.indexOf(id) === -1) wanted.push(id);
+          }
+          return Promise.all(wanted.map(function (id) {
+            return new Promise(function (res) {
+              try {
+                if (page.objs.has(id)) res(page.objs.get(id));
+                else page.objs.get(id, res);
+              } catch (e) { res(null); }
+            }).then(function (img) {
+              if (!img || !img.width || img.width < MIN_PIC || img.height < MIN_PIC) return null;
+              var cv = drawImage(img);
+              if (!cv) return null;
+              return new Promise(function (res) {
+                cv.toBlob(function (blob) {
+                  res(blob ? { blob: blob, url: URL.createObjectURL(blob), w: img.width, h: img.height, page: n } : null);
+                }, 'image/png');
+              });
+            }).catch(function () { return null; });
+          }));
+        });
+      }).catch(function () { return []; });
+    })).then(function (perPage) {
+      var all = [];
+      perPage.forEach(function (list) {
+        list.forEach(function (x) { if (x) all.push(x); });
+      });
+      all.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
+      return all;
+    });
+  }
+
+  // Thumbnails plus a destination for each. Nothing is attached until the
+  // button is pressed, so a wrong guess here costs nothing.
+  function renderPicturePicker(images) {
+    if (!images.length) return '';
+    var opts = '<option value="">Skip</option><option value="feature">Featured item</option>';
+    Array.prototype.forEach.call($('cardList').children, function (box, i) {
+      var h = (box.querySelector('.h').value || ('Section ' + (i + 1))).replace(/[<>&]/g, '');
+      opts += '<option value="' + i + '">' + h + '</option>';
+    });
+    var html = '<div class="picfound"><h3>' + images.length + ' picture' +
+      (images.length === 1 ? '' : 's') + ' found in the PDF</h3>' +
+      '<p>The importer reads text, so anything printed as a picture is not in the sections above. ' +
+      'Choose where each one belongs. The church logo and the QR codes come through here too, ' +
+      'so leave those on Skip.</p><div class="picgrid">';
+    images.forEach(function (im, i) {
+      html += '<div class="pic"><img src="' + im.url + '" alt="Picture ' + (i + 1) + ' from the PDF">' +
+              '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>' +
+              '<select data-pic="' + i + '">' + opts + '</select></div>';
+    });
+    return html + '</div><div class="actions">' +
+      '<button type="button" class="btn" id="attachPics">Attach the chosen pictures</button>' +
+      '<span id="attachNote" class="note"></span></div></div>';
+  }
+
+  function attachPictures(images) {
+    var picks = [];
+    Array.prototype.forEach.call(document.querySelectorAll('#importSummary select[data-pic]'), function (sel) {
+      if (sel.value !== '') picks.push({ im: images[Number(sel.getAttribute('data-pic'))], to: sel.value });
+    });
+    if (!picks.length) { note($('attachNote'), 'Nothing chosen yet.', 'bad'); return; }
+    if (!$('issueMonth').value) { note($('attachNote'), 'Choose the month first, then attach.', 'bad'); return; }
+    note($('attachNote'), 'Uploading ' + picks.length + '...');
+    var done = 0;
+    picks.reduce(function (chain, pick) {
+      return chain.then(function () {
+        var file = new File([pick.im.blob], 'pdf-picture-' + (done + 1) + '.png', { type: 'image/png' });
+        var slot = pick.to === 'feature' ? null : 'sec' + (Number(pick.to) + 1);
+        return upload(file, 'image', slot).then(function (r) {
+          if (pick.to === 'feature') {
+            state.featureImageKey = r.key;
+            var fp = $('featPreview');
+            if (fp) {
+              fp.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
+              fp.hidden = false;
+            }
+          } else {
+            var box = $('cardList').children[Number(pick.to)];
+            if (box) {
+              box.dataset.image = r.key;
+              // The renderer needs real dimensions to keep the columns level.
+              box.dataset.imageW = pick.im.w;
+              box.dataset.imageH = pick.im.h;
+              var pv = box.querySelector('.ipreview');
+              pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
+              pv.hidden = false;
+            }
+          }
+          done++;
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      note($('attachNote'), 'Attached ' + done + '. Check the preview below.', 'ok');
+      markDirty();
+      schedulePreview();
+    }).catch(function (e) {
+      note($('attachNote'), e.message, 'bad');
+    });
+  }
+
   $('importPdf').onchange = function () {
     var file = this.files[0];
     if (!file) return;
     note($('importNote'), 'Reading the PDF...');
     $('importSummary').hidden = true;
-    readPdfText(file)
-      .then(function (text) {
+    readPdf(file)
+      .then(function (got) {
+        var text = got.text;
         if (!text || text.replace(/\s/g, '').length < 50) {
           throw new Error('No text found in that PDF. It may be a scan rather than a document. Use the paste box instead.');
         }
         var r = window.TorchParse.parse(text);
         applyParsed(r, 'the PDF');
+        if (got.images.length) {
+          $('importSummary').innerHTML += renderPicturePicker(got.images);
+          $('attachPics').onclick = function () { attachPictures(got.images); };
+        }
         note($('importNote'), 'Read the PDF. Now saving a copy...');
         // Keep the PDF on file too, so this is one step rather than two.
         var slug = $('issueMonth').value || r.slug;
