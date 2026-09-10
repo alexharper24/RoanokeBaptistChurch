@@ -44,7 +44,10 @@
 html { scroll-behavior: smooth; }
 body { font-family: 'Lora', Georgia, serif; color: var(--text); line-height: 1.6; background: var(--white); }
 h1, h2, h3, h4 { font-family: 'Lora', serif; line-height: 1.25; color: var(--navy); }
-img { max-width: 100%; display: block; }
+/* height:auto is load-bearing now that every <img> carries width/height
+   attributes: without it the fixed height attribute fights max-width:100%
+   and images render squashed. Added 2026-09-10 with the dimension backfill. */
+img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; }
 
 .container { width: min(94%, var(--maxw)); margin-inline: auto; }
