@@ -166,7 +166,13 @@ const IMAGE_HEIGHT = 180;  // varies 120-220 with aspect ratio; this is the midd
 
 export function estimateCardHeight(card, charsPerLine, contentWidth) {
   let h = CARD_CHROME;
-  if (card.image) {
+  if (card.image && card.image2) {
+    // Two pictures share the row, each at half the card less the gap, so the
+    // card grows by the taller of the two rather than by both.
+    const half = Math.floor((contentWidth - 12) / 2);
+    const one = (w, ht) => (w && ht ? Math.round((Math.min(w, half) * ht) / w) : IMAGE_HEIGHT / 2);
+    h += Math.max(one(card.image_w, card.image_h), one(card.image2_w, card.image2_h)) + 16;
+  } else if (card.image) {
     // An image renders at its natural width, capped by the card. Knowing its
     // real dimensions matters: a 540px-wide graphic in a 398px column is
     // nearly 300px tall, where a 184px one is under 170px. Guessing a single
@@ -254,9 +260,11 @@ function renderCard(card) {
         ? '<p>' + escCopy(points[0]) + '</p>'
         : '';
   const src = imageSrc(card.image);
-  const img = src
-    ? `<img class="torch-card-img" src="${esc(src)}" alt="${esc(card.image_alt || card.heading || '')}" loading="lazy">`
-    : '';
+  const src2 = imageSrc(card.image2);
+  const one = (s, alt) => `<img class="torch-card-img" src="${esc(s)}" alt="${esc(alt || card.heading || '')}" loading="lazy">`;
+  const img = src && src2
+    ? `<div class="torch-card-pair">${one(src, card.image_alt)}${one(src2, card.image2_alt)}</div>`
+    : src ? one(src, card.image_alt) : '';
   return (
     `<div class="torch-card${accent ? ' ' + accent : ''}">` +
     (card.heading ? `<h4>${esc(card.heading)}</h4>` : '') +
@@ -614,7 +622,11 @@ export async function handleAdminApi(request, env, url, actor) {
     const dataUri = `data:${file.type};base64,${btoa(binary)}`;
 
     try {
-      const out = await env.AI.run('@cf/qwen/qwen3.8-27b', {
+      const MODEL = '@cf/qwen/qwen3.8-27b';
+      // Call one: read. Kept to the single task that has proved reliable. A
+      // combined "transcribe and rewrite" prompt made the model reason for so
+      // long on the busier posters that it returned nothing at all.
+      const seen = await env.AI.run(MODEL, {
         messages: [{
           role: 'user',
           content: [
@@ -625,21 +637,37 @@ export async function handleAdminApi(request, env, url, actor) {
             { type: 'image_url', image_url: { url: dataUri } },
           ],
         }],
-        // This model thinks before it answers, and the thinking comes out of the
-        // same budget. 1200 leaves room for both on a busy poster; the largest
-        // of the September panels used 259.
         max_tokens: 1200,
         temperature: 0,
       });
-      const choice = out && out.choices && out.choices[0];
-      const raw = String(
-        (choice && choice.message && choice.message.content) || out.response || out.answer || ''
-      ).trim();
+      const pick = (out) => {
+        const c = out && out.choices && out.choices[0];
+        return String((c && c.message && c.message.content) || (out && (out.response || out.answer)) || '').trim();
+      };
+      const raw = pick(seen);
       const lines = raw.split(/\r?\n/).map((l) => l.replace(/^[-*\u2022]\s*/, '').trim()).filter(Boolean);
+      const heading = lines.length ? lines[0].slice(0, 80) : '';
+      const rest = lines.slice(1);
+
+      // The body is assembled from the lines, not written by a model. A second
+      // call asking this model to rewrite them as a sentence never finished:
+      // it reasons about which lines matter and how to case them until the
+      // token budget is gone, and returns nothing (finish_reason "length",
+      // content null, measured at 600 and 1200 tokens, with and without the
+      // /no_think switch). Joining the lines is faithful, instant, and cannot
+      // invent a date. A line ending in a colon is a lead-in for the next.
+      const parts = [];
+      for (const l of rest) {
+        if (parts.length && /:$/.test(parts[parts.length - 1])) {
+          parts[parts.length - 1] = parts[parts.length - 1].replace(/:$/, '') + ' ' + l;
+        } else parts.push(l);
+      }
+      const prose = parts.length ? parts.join(', ').replace(/\s+/g, ' ').replace(/[.,;:]+$/, '') + '.' : '';
       return json({
         ok: true,
-        heading: lines.length ? lines[0].slice(0, 80) : '',
-        body: lines.slice(1).join('\n'),
+        heading,
+        body: prose || rest.join('\n'),
+        lines,
         text: raw,
       });
     } catch (e) {

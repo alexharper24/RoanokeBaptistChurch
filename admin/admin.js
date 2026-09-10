@@ -82,6 +82,8 @@
           '<option value="accent-crimson">Crimson</option>' +
           '<option value="accent-teal">Teal</option>' +
         '</select>' +
+        '<button type="button" class="btn btn-x mv" data-dir="-1" aria-label="Move this section up" title="Move up">&#9650;</button>' +
+        '<button type="button" class="btn btn-x mv" data-dir="1" aria-label="Move this section down" title="Move down">&#9660;</button>' +
         '<button type="button" class="btn btn-x" aria-label="Remove this section">Remove section</button>' +
       '</div>' +
       '<div class="rows"></div>' +
@@ -92,7 +94,11 @@
       '<div class="row"><label class="field"><span>Picture for this section <em>optional</em></span>' +
         '<input class="i" type="file" accept="image/jpeg,image/png,image/webp">' +
         '<small class="istatus"></small></label>' +
-        '<div class="field"><span>&nbsp;</span><img class="ipreview thumb" alt="" hidden></div></div>';
+        '<div class="field"><span>&nbsp;</span><img class="ipreview thumb" alt="" hidden></div></div>' +
+      '<div class="row"><label class="field"><span>Second picture <em>optional, shown beside the first</em></span>' +
+        '<input class="i2" type="file" accept="image/jpeg,image/png,image/webp">' +
+        '<small class="istatus2"></small></label>' +
+        '<div class="field"><span>&nbsp;</span><img class="ipreview2 thumb" alt="" hidden></div></div>';
 
     box.querySelector('.h').value = c.heading || '';
     box.querySelector('.a').value = c.accent || '';
@@ -108,6 +114,48 @@
       pv.src = /^img\//.test(c.image) ? '/' + c.image : '/api/admin/file/' + encodeURIComponent(c.image);
       pv.hidden = false;
     }
+    box.dataset.image2 = c.image2 || '';
+    if (c.image2_w) box.dataset.imageW2 = c.image2_w;
+    if (c.image2_h) box.dataset.imageH2 = c.image2_h;
+    if (c.image2) {
+      var pv2 = box.querySelector('.ipreview2');
+      pv2.src = /^img\//.test(c.image2) ? '/' + c.image2 : '/api/admin/file/' + encodeURIComponent(c.image2);
+      pv2.hidden = false;
+    }
+    box.querySelector('.i2').onchange = function () {
+      var f = this.files[0];
+      if (!f) return;
+      var status = box.querySelector('.istatus2');
+      status.textContent = 'Uploading...';
+      upload(f, 'image', 'sec' + (Array.prototype.indexOf.call($('cardList').children, box) + 1) + 'b')
+        .then(function (r) {
+          box.dataset.image2 = r.key;
+          var pv = box.querySelector('.ipreview2');
+          pv.onload = function () {
+            box.dataset.imageW2 = pv.naturalWidth;
+            box.dataset.imageH2 = pv.naturalHeight;
+            schedulePreview();
+          };
+          pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
+          pv.hidden = false;
+          status.textContent = 'Uploaded.';
+          markDirty();
+        })
+        .catch(function (e) { status.textContent = e.message; });
+    };
+    // Order here is order on the page. Which column each lands in is still
+    // chosen automatically so the two columns stay level.
+    Array.prototype.forEach.call(box.querySelectorAll('.mv'), function (btn) {
+      btn.onclick = function () {
+        var list = $('cardList');
+        if (btn.dataset.dir === '-1' && box.previousElementSibling) list.insertBefore(box, box.previousElementSibling);
+        else if (btn.dataset.dir === '1' && box.nextElementSibling) list.insertBefore(box.nextElementSibling, box);
+        else return;
+        markDirty();
+        schedulePreview();
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      };
+    });
     box.querySelector('.i').onchange = function () {
       var f = this.files[0];
       if (!f) return;
@@ -149,6 +197,9 @@
         image: box.dataset.image || null,
         image_w: box.dataset.imageW ? Number(box.dataset.imageW) : null,
         image_h: box.dataset.imageH ? Number(box.dataset.imageH) : null,
+        image2: box.dataset.image2 || null,
+        image2_w: box.dataset.imageW2 ? Number(box.dataset.imageW2) : null,
+        image2_h: box.dataset.imageH2 ? Number(box.dataset.imageH2) : null,
       };
     }).filter(function (c) { return c.heading || c.body || c.rows.length; });
   }
@@ -227,19 +278,11 @@
     r.cards.forEach(function (c) { $('cardList').appendChild(cardEditor(c)); });
 
     var box = $('importSummary');
-    var html = '<h3>Filled in from ' + sourceLabel + '</h3><ul>';
-    html += '<li>' + (r.issue_label || 'month not found') + '</li>';
-    html += '<li>' + r.events.length + ' dated event' + (r.events.length === 1 ? '' : 's') + '</li>';
-    html += '<li>' + r.cards.length + ' section' + (r.cards.length === 1 ? '' : 's') +
-            (r.cards.length ? ': ' + r.cards.map(function (c) { return c.heading; }).join(', ') : '') + '</li>';
-    html += '</ul>';
-    if (r.skipped.length) {
-      html += '<p class="dropped"><strong>Left out on purpose:</strong> ' + r.skipped.join(', ') +
-              '. Member birthdays and anniversaries stay in the printed edition.</p>';
-    }
-    if (r.notes.length) html += '<p>' + r.notes.join(' ') + '</p>';
-    html += '<p>Read through everything below before publishing. The newsletter is laid out for print, ' +
-            'so some text will have landed in the wrong section.</p>';
+    var html = '<h3>Filled in from ' + sourceLabel + '</h3>' +
+      '<p class="facts">' + esc(r.issue_label || 'month not found') +
+      ' &middot; ' + r.events.length + ' event' + (r.events.length === 1 ? '' : 's') +
+      ' &middot; ' + r.cards.length + ' section' + (r.cards.length === 1 ? '' : 's') +
+      (r.skipped.length ? ' &middot; birthdays and anniversaries left out' : '') + '</p>';
     box.innerHTML = html;
     box.hidden = false;
     markDirty();
@@ -548,13 +591,9 @@
     });
     var html = '<div class="picfound"><h3>' + images.length + ' picture' +
       (images.length === 1 ? '' : 's') + ' found in the PDF</h3>' +
-      '<p>The words on each picture are read and it is placed for you: artwork with its own ' +
-      'title becomes a new section, and a photo that belongs inside a section goes there. ' +
-      'Anything it could not place has a dropdown. Sections made this way are marked amber ' +
-      'in the list: check their dates and times against the print before publishing.' +
-      (images.furniture ? ' The church logo and ' + (images.furniture - 1 === 1 ? 'the QR code were' :
-        (images.furniture - 1) + ' QR codes were') + ' left out automatically.' : '') +
-      '</p><div class="picgrid">';
+      '<p>Placed for you where the home is clear. Anything with a dropdown needs a choice. ' +
+      'Amber sections were read off a picture: check dates and times against the print.</p>' +
+      '<div class="picgrid">';
     var unplaced = 0;
     images.forEach(function (im, i) {
       var label = im.caption || (im.ocr && im.ocr.heading) || 'Not named in the text';
@@ -592,14 +631,23 @@
     var settle = function () {
       left--;
       if (left === 0) autoPlace(images);
+      else next();
     };
-    images.forEach(function (im, i) {
+    // Two pictures at a time. Five at once made the model time out on two of
+    // them even with a retry; two keeps every one under its limit, and the
+    // labels still fill in as they land.
+    var queue = images.map(function (im, i) { return { im: im, i: i }; });
+    var next = function () { var q = queue.shift(); if (q) readOne(q.im, q.i); };
+    var readOne = function (im, i) {
       var tile = document.querySelector('#importSummary .pic[data-pic-tile="' + i + '"]');
       var label = tile ? tile.querySelector('strong') : null;
       if (label && !im.caption) { label.textContent = 'Reading the words...'; label.className = 'reading'; }
       var fd = new FormData();
       fd.append('file', new File([im.blob], 'picture.png', { type: 'image/png' }));
-      api('/api/admin/ocr', { method: 'POST', body: fd })
+      // The model takes 20 to 30 seconds a picture and the first call of the
+      // day can time out while it warms up, so one failure gets one retry.
+      var ask = function () { return api('/api/admin/ocr', { method: 'POST', body: fd }); };
+      ask().catch(ask)
         .then(function (r) {
           im.ocr = r;
           if (!label) return;
@@ -615,7 +663,9 @@
           label.className = im.caption ? '' : 'unnamed';
         })
         .then(settle);
-    });
+    };
+    next();
+    next();
   }
 
   function attachPictures(images) {
@@ -625,19 +675,20 @@
     });
     if (!picks.length) { note($('attachNote'), 'Nothing chosen yet.', 'bad'); return; }
     if (!$('issueMonth').value) { note($('attachNote'), 'Choose the month first, then attach.', 'bad'); return; }
+    // A section shows two pictures side by side at most; the feature shows one.
     var clash = null;
-    var takenBy = {};
+    var count = {};
     picks.forEach(function (pick) {
-      if (pick.to === 'new') return;              // each of these makes its own
-      if (takenBy[pick.to]) clash = pick.to;
-      takenBy[pick.to] = true;
+      if (pick.to === 'new') return;
+      if (count[pick.to] === undefined) count[pick.to] = pick.to === 'feature' ? 0 : picturesIn(Number(pick.to));
+      count[pick.to]++;
+      if (count[pick.to] > (pick.to === 'feature' ? 1 : 2)) clash = pick.to;
     });
     if (clash !== null) {
       var where = clash === 'feature' ? 'the featured item'
         : ($('cardList').children[Number(clash)].querySelector('.h').value || 'that section');
-      note($('attachNote'), 'Two pictures are both going to ' + where +
-        ', which can only hold one. Send one of them to a new section instead, ' +
-        'or combine them into a single picture first.', 'bad');
+      note($('attachNote'), 'Too many pictures for ' + where + ': a section shows two at most, ' +
+        'the featured item one. Send the rest to a new section instead.', 'bad');
       return;
     }
     return placePicks(picks, images, $('attachNote'));
@@ -645,6 +696,11 @@
 
   // Upload each picked picture and put it where it goes. `to` is 'feature',
   // 'new', or a section index as a string.
+  function picturesIn(i) {
+    var box = $('cardList').children[i];
+    return box ? (box.dataset.image ? 1 : 0) + (box.dataset.image2 ? 1 : 0) : 0;
+  }
+
   function placePicks(picks, images, noteEl) {
     note(noteEl, 'Uploading ' + picks.length + '...');
     var done = 0;
@@ -660,10 +716,8 @@
           var read = pick.im.ocr || {};
           var fresh = cardEditor({
             heading: pick.im.caption || read.heading || '',
-            // Every line after the heading, as separate points, which is how
-            // these panels read: a time, an age range, a date.
-            body: (read.body || '').split(/\n/).filter(Boolean)
-              .map(function (l) { return '- ' + l; }).join('\n'),
+            // The sentence form, written to read like the rest of the page.
+            body: read.body || '',
           });
           $('cardList').appendChild(fresh);
           if (read.heading || read.body) { fresh.classList.add('needs-check'); readCount++; }
@@ -673,7 +727,8 @@
         }
         pick.im.placed = target === 'feature' ? 'the featured item'
           : ($('cardList').children[Number(target)].querySelector('.h').value || ('section ' + (Number(target) + 1)));
-        var slot = target === 'feature' ? null : 'sec' + (Number(target) + 1);
+        var second = target !== 'feature' && !!($('cardList').children[Number(target)] || {}).dataset.image;
+        var slot = target === 'feature' ? null : 'sec' + (Number(target) + 1) + (second ? 'b' : '');
         return upload(file, 'image', slot).then(function (r) {
           if (target === 'feature') {
             state.featureImageKey = r.key;
@@ -685,11 +740,12 @@
           } else {
             var box = $('cardList').children[Number(target)];
             if (box) {
-              box.dataset.image = r.key;
+              var k = second ? 'image2' : 'image';
+              box.dataset[k] = r.key;
               // The renderer needs real dimensions to keep the columns level.
-              box.dataset.imageW = pick.im.w;
-              box.dataset.imageH = pick.im.h;
-              var pv = box.querySelector('.ipreview');
+              box.dataset[second ? 'imageW2' : 'imageW'] = pick.im.w;
+              box.dataset[second ? 'imageH2' : 'imageH'] = pick.im.h;
+              var pv = box.querySelector(second ? '.ipreview2' : '.ipreview');
               if (pv) {
                 pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
                 pv.hidden = false;
@@ -738,7 +794,7 @@
     if (!$('issueMonth').value) return Promise.resolve();
     var boxes = Array.prototype.slice.call($('cardList').children);
     var taken = {};
-    boxes.forEach(function (b, i) { if (b.dataset.image) taken[i] = true; });
+    boxes.forEach(function (b, i) { taken[i] = picturesIn(i); });
     var picks = [];
     images.forEach(function (im) {
       if (im.placed) return;
@@ -751,7 +807,7 @@
           var body = (b.querySelector('.b').value || '').toLowerCase();
           if (h === cap || (cap.length >= 6 && body.indexOf(cap) !== -1)) hit = i;
         });
-        if (hit !== -1 && !taken[hit]) { taken[hit] = true; picks.push({ im: im, to: String(hit) }); return; }
+        if (hit !== -1 && taken[hit] < 2) { taken[hit]++; picks.push({ im: im, to: String(hit) }); return; }
         // Captioned means the text above it describes it, so it belongs inside
         // existing wording, never as a section of its own. If its section is
         // already full, or nothing matched, a human decides.
@@ -761,6 +817,57 @@
     });
     if (!picks.length) return Promise.resolve();
     return placePicks(picks, images, $('attachNote') || $('importNote'));
+  }
+
+  // The one thing the month is about goes in the wide block at the top. The
+  // print does not mark it, but it is the section that is new this month and
+  // has the most to say. Recurring sections are learned from the most recent
+  // saved issue, so this stays right as the newsletter changes shape.
+  var STANDING = ['rbcteens', 'roanokebaptistschoolnews', 'soulwinningprayer', 'missionsspotlight', 'upcomingevents'];
+  function norm(t) { return String(t || '').toLowerCase().replace(/[^a-z]/g, ''); }
+
+  function autoFeature(r) {
+    if ($('featTitle').value.trim()) return Promise.resolve(null);
+    return api('/api/admin/issues').then(function (list) {
+      var prev = ((list && list.issues) || []).filter(function (i) { return i.slug !== r.slug; })[0];
+      return prev ? api('/api/admin/issue/' + prev.slug).then(function (x) { return x.issue; }).catch(function () { return null; }) : null;
+    }).catch(function () { return null; }).then(function (prevIssue) {
+      var stems = STANDING.slice();
+      ((prevIssue && prevIssue.cards) || []).forEach(function (c) { if (c.heading) stems.push(norm(c.heading)); });
+      var isRecurring = function (h) {
+        var k = norm(h);
+        return stems.some(function (st) { return st && (k.indexOf(st) === 0 || st.indexOf(k) === 0); });
+      };
+      var boxes = Array.prototype.slice.call($('cardList').children);
+      var best = null;
+      boxes.forEach(function (box) {
+        var h = box.querySelector('.h').value;
+        if (!h || isRecurring(h)) return;
+        // A section read off a picture is already a picture. The feature is
+        // for the month's headline item as the newsletter wrote it up.
+        if (box.classList.contains('needs-check') || box.classList.contains('needs-text')) return;
+        // Weight of what it has to say: body plus its dated lines.
+        var weight = box.querySelector('.b').value.length + box.querySelectorAll('.rows .line').length * 40;
+        if (weight < 60) return;
+        if (!best || weight > best.weight) best = { box: box, weight: weight, heading: h };
+      });
+      if (!best) return null;
+      var box = best.box;
+      var body = box.querySelector('.b').value.trim();
+      var rows = readRows(box.querySelector('.rows'));
+      // Just the date. What follows it belongs in the body, not in "when":
+      // the old pattern ran forty characters past the date and dragged the
+      // next clause along with it.
+      var when = rows.length ? rows[0].date + (rows[0].detail ? ', ' + rows[0].detail : '')
+        : ((body.match(/\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:-|and|&)\s*\d{1,2}(?:st|nd|rd|th)?)?(?:,\s*\d{4})?/) || [''])[0]);
+      $('featKicker').value = 'This Month';
+      $('featTitle').value = best.heading;
+      $('featWhen').value = when.trim();
+      $('featBody').value = body || rows.map(function (x) { return x.date + ': ' + x.name + (x.detail ? ', ' + x.detail : ''); }).join('\n');
+      box.remove();
+      markDirty();
+      return best.heading;
+    });
   }
 
   $('importPdf').onchange = function () {
@@ -776,6 +883,12 @@
         }
         var r = window.TorchParse.parse(text);
         applyParsed(r, 'the PDF');
+        autoFeature(r).then(function (title) {
+          if (!title) return;
+          var facts = document.querySelector('#importSummary .facts');
+          if (facts) facts.innerHTML += ' &middot; featured: ' + esc(title);
+          schedulePreview();
+        });
         if (got.images.length) {
           $('importSummary').innerHTML += renderPicturePicker(got.images);
           $('attachPics').onclick = function () { attachPictures(got.images); };
@@ -922,6 +1035,14 @@ function upload(file, kind, slot) {
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();
+      var grow = function () {
+        try {
+          var h = doc.documentElement.scrollHeight;
+          if (h > 200) frame.style.height = (h + 24) + 'px';
+        } catch (e) {}
+      };
+      setTimeout(grow, 150);
+      setTimeout(grow, 900);
       if (scroll) setTimeout(function () { try { frame.contentWindow.scrollTo(0, scroll); } catch (e) {} }, 60);
       note($('previewNote'), 'Up to date.', 'ok');
     }).catch(function (e) {

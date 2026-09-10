@@ -9,7 +9,7 @@
   <title>The Torch, Editor | Roanoke Baptist Church</title>
   <link rel="icon" href="favicon.ico?v=1" sizes="any">
   <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/admin/admin.css?v=12">
+  <link rel="stylesheet" href="/admin/admin.css?v=13">
 </head>
 <body>
 
@@ -35,6 +35,31 @@
 
   <div class="cols">
     <div class="col col-edit">
+  <!-- IMPORT --------------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Start from this month's Torch <span class="opt">recommended</span></h2>
+    <p class="help">Choose the PDF. It fills in the month, verse, events, sections and pictures. Nothing is published until you say so.</p>
+    <div class="row">
+      <label class="field">
+        <span>The Torch PDF</span>
+        <input type="file" id="importPdf" accept="application/pdf">
+      </label>
+    </div>
+    <div class="actions">
+      <span id="importNote" class="note"></span>
+    </div>
+    <div id="importSummary" class="summary" hidden></div>
+
+    <details class="fallback">
+      <summary>Or paste the text instead</summary>
+      <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
+      <div class="actions">
+        <button type="button" class="btn" id="parseBtn">Fill in from this text</button>
+        <span id="parseNote" class="note"></span>
+      </div>
+    </details>
+  </section>
+
   <!-- ISSUE PICKER ------------------------------------------------------- -->
   <section class="panel">
     <h2>Which issue</h2>
@@ -140,33 +165,6 @@
 
     </div>
     <div class="col col-side">
-  <!-- IMPORT --------------------------------------------------------------- -->
-  <section class="panel">
-    <h2>Start from this month's Torch <span class="opt">recommended</span></h2>
-    <p class="help">Choose the PDF and it fills in the month, the verse, the dated events, and the sections. Read through afterwards and fix anything it got wrong. Nothing is saved or published until you say so.</p>
-    <div class="row">
-      <label class="field">
-        <span>The Torch PDF</span>
-        <input type="file" id="importPdf" accept="application/pdf">
-        <small>It also keeps a copy of the PDF on file for the church.</small>
-      </label>
-    </div>
-    <div class="actions">
-      <span id="importNote" class="note"></span>
-    </div>
-    <div id="importSummary" class="summary" hidden></div>
-
-    <details class="fallback">
-      <summary>Or paste the text instead</summary>
-      <p class="help">If the PDF will not read, open the Torch document, select everything, copy, and paste it here.</p>
-      <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
-      <div class="actions">
-        <button type="button" class="btn" id="parseBtn">Fill in from this text</button>
-        <span id="parseNote" class="note"></span>
-      </div>
-    </details>
-  </section>
-
   <section class="panel" id="previewPanel">
     <div class="preview-head">
       <h2>Preview</h2>
@@ -202,6 +200,6 @@
 </div>
 
 <script src="/admin/parse-torch.js?v=2"></script>
-<script src="/admin/admin.js?v=11"></script>
+<script src="/admin/admin.js?v=12"></script>
 </body>
 </html>
