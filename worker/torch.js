@@ -209,27 +209,36 @@ const RIGHT_WIDTH = 398;
 // pathological issue cannot hang the render.
 const EXHAUSTIVE_LIMIT = 14;
 
-// The month's own items read first and the regular sections sit under them,
-// in both columns. Balancing everything as one set could not promise that: a
-// split that levelled the columns might well have opened the right-hand one
-// with RBC Teens. So the particular items are levelled first, then the regular
-// ones are levelled on top of those heights, and every regular card ends up
-// below every particular one whichever side it lands on. Cards with no flag
-// at all are treated as particular, so older issues render as they did.
+// The month's own items read first and the regular sections sit under them.
+//
+// The first version did this as two separate balances, particular items first
+// and regular ones levelled on top. It kept the order absolutely but gave up
+// the balance to do it: on the September issue the estimated gap went from 5px
+// to 39px, and the left column ended up with three cards to the right's five,
+// so the stretch that levels the columns padded each of those three visibly.
+//
+// So it is one balance with a preference, not two balances. Cards are sorted
+// particular-first, which fixes the order inside each column for free, and the
+// only thing that can still go wrong is a column that opens with a regular
+// card because every particular one went to the other side. Each such column
+// costs the equivalent of 60px of imbalance. That is enough to steer the split
+// whenever a compliant one is nearly as level, and cheap enough that a badly
+// lopsided compliant split still loses to a level one.
+const OPEN_WITH_REGULAR = 60;
+
 export function arrangeColumns(cards) {
-  const particular = cards.filter((c) => !c.standing);
-  const standing = cards.filter((c) => c.standing);
-  const top = balanceColumns(particular);
-  const bottom = balanceColumns(standing, top);
-  return {
-    left: top.left.concat(bottom.left),
-    right: top.right.concat(bottom.right),
-    leftHeight: bottom.leftHeight,
-    rightHeight: bottom.rightHeight,
-  };
+  const ordered = cards.filter((c) => !c.standing).concat(cards.filter((c) => c.standing));
+  const anyParticular = ordered.some((c) => !c.standing);
+  return balanceColumns(ordered, null, (left, right) => {
+    if (!anyParticular) return 0;
+    let cost = 0;
+    if (left.length && left[0].standing) cost += OPEN_WITH_REGULAR;
+    if (right.length && right[0].standing) cost += OPEN_WITH_REGULAR;
+    return cost;
+  });
 }
 
-export function balanceColumns(cards, start) {
+export function balanceColumns(cards, start, penalty) {
   const n = cards.length;
   const lh0 = (start && start.leftHeight) || 0;
   const rh0 = (start && start.rightHeight) || 0;
@@ -255,7 +264,12 @@ export function balanceColumns(cards, start) {
       if (mask & (1 << i)) rh += hR[i];
       else lh += hL[i];
     }
-    const diff = Math.abs(lh - rh);
+    let diff = Math.abs(lh - rh);
+    if (penalty) {
+      const L = [], R = [];
+      for (let i = 0; i < n; i++) (mask & (1 << i) ? R : L).push(cards[i]);
+      diff += penalty(L, R);
+    }
     // Tie-break towards keeping the first section on the left, so the reading
     // order stays natural when two splits are equally balanced.
     const firstLeft = (mask & 1) === 0;
@@ -312,7 +326,13 @@ export function renderIssue(issue, opts = {}) {
   const allCards = (issue.events || []).length
     ? [{ heading: 'Upcoming Events', rows: issue.events, body: '', standing: true }].concat(issue.cards || [])
     : (issue.cards || []);
-  const cols = arrangeColumns(allCards);
+  // The featured item is already at the top of the page. A section with the
+  // same heading is the same item imported twice, not a second story.
+  const featKey = String(issue.feature_title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const dedupedCards = featKey
+    ? allCards.filter((c) => String(c.heading || '').toLowerCase().replace(/[^a-z0-9]/g, '') !== featKey)
+    : allCards;
+  const cols = arrangeColumns(dedupedCards);
   const left = cols.left.map(renderCard).join('\n');
   const right = cols.right.map(renderCard).join('\n');
 

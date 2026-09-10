@@ -118,9 +118,18 @@ const belowAll = (col) => {
 ok('regular sections come after every particular one, left', belowAll(arr.left), arr.left.map((c) => c.heading));
 ok('regular sections come after every particular one, right', belowAll(arr.right), arr.right.map((c) => c.heading));
 ok('every mixed card is placed exactly once', arr.left.length + arr.right.length === mixed.length);
-ok('the two-group split is still close to even',
-  Math.abs(arr.leftHeight - arr.rightHeight) / Math.max(arr.leftHeight, arr.rightHeight) < 0.2,
-  { l: arr.leftHeight, r: arr.rightHeight });
+// One balance with a preference, so the columns stay as level as the plain
+// balance would make them, give or take the 60px the preference may spend.
+const plainMixed = balanceColumns(mixed);
+ok('the ordered split gives up at most the preference cost in balance',
+  Math.abs(arr.leftHeight - arr.rightHeight) <= Math.abs(plainMixed.leftHeight - plainMixed.rightHeight) + 60,
+  { ordered: [arr.leftHeight, arr.rightHeight], plain: [plainMixed.leftHeight, plainMixed.rightHeight] });
+// The featured item is not shown again as a section.
+const dupHtml = renderIssue({ slug: 'd', issue_label: 'D', feature_title: 'Potato Soup Fundraiser', feature_body: 'Soup.', events: [],
+  cards: [{ heading: 'Potato Soup Fundraiser', body: 'again', rows: [] }, { heading: 'RBC Teens', body: 'x', rows: [] }] });
+ok('a section with the featured heading is not rendered twice',
+  (dupHtml.match(/Potato Soup Fundraiser/g) || []).length === 1 && /RBC Teens/.test(dupHtml),
+  (dupHtml.match(/Potato Soup Fundraiser/g) || []).length);
 const plain = arrangeColumns(many);
 ok('with no flags the arrangement is the plain balance',
   JSON.stringify(plain.left.map((c) => c.heading)) === JSON.stringify(bal.left.map((c) => c.heading)) &&

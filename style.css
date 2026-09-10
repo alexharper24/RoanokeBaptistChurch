@@ -426,7 +426,9 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
    in the gaps (justify-content: space-between) made one column's gaps 92px
    against the other's 22px, which read as a mistake; a few extra pixels of
    room inside each card reads as padding. */
-.torch-grid > div > .torch-card { flex-grow: 1; }
+/* Cards keep their own height. Stretching them to level the columns spread
+   the difference into every card as padding, which read as wasted space; the
+   balancer gets the columns within a few pixels and the rest can show. */
 .torch-grid > div > .torch-card { margin-bottom: 0; }
 .torch-col-head { font-size: 1.4rem; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--rule); display: inline-block; }
 .torch-card { background: var(--white); border: 1px solid #e2d9c4; border-radius: 12px; padding: 0 24px 20px; margin-bottom: 22px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); overflow: hidden; }

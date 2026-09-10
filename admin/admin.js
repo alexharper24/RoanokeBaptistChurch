@@ -836,8 +836,17 @@
   var STANDING = ['rbcteens', 'roanokebaptistschoolnews', 'soulwinningprayer', 'missionsspotlight', 'upcomingevents'];
   function norm(t) { return String(t || '').toLowerCase().replace(/[^a-z]/g, ''); }
 
+  // A section whose heading is the featured item is that item imported again.
+  function dropFeatureDuplicate() {
+    var k = norm($('featTitle').value);
+    if (!k) return;
+    Array.prototype.slice.call($('cardList').children).forEach(function (box) {
+      if (norm(box.querySelector('.h').value) === k) box.remove();
+    });
+  }
+
   function autoFeature(r) {
-    if ($('featTitle').value.trim()) return Promise.resolve(null);
+    if ($('featTitle').value.trim()) { dropFeatureDuplicate(); return Promise.resolve(null); }
     return api('/api/admin/issues').then(function (list) {
       var prev = ((list && list.issues) || []).filter(function (i) { return i.slug !== r.slug; })[0];
       return prev ? api('/api/admin/issue/' + prev.slug).then(function (x) { return x.issue; }).catch(function () { return null; }) : null;
@@ -882,6 +891,7 @@
       $('featWhen').value = when.trim();
       $('featBody').value = body || rows.map(function (x) { return x.date + ': ' + x.name + (x.detail ? ', ' + x.detail : ''); }).join('\n');
       box.remove();
+      dropFeatureDuplicate();
       markDirty();
       return best.heading;
     });
