@@ -12,7 +12,7 @@
 import { readFileSync } from 'node:fs';
 import {
   findPrivacyWarnings, renderIssue, tidyCopy, bodyPoints,
-  balanceColumns, estimateCardHeight,
+  balanceColumns, arrangeColumns, estimateCardHeight,
 } from './worker/torch.js';
 import './admin/parse-torch.js';
 
@@ -99,6 +99,32 @@ ok('image dimensions change the estimate',
 const t0 = Date.now();
 balanceColumns(Array.from({ length: 12 }, (_, i) => ({ heading: 'S' + i, body: 'x'.repeat(200), rows: [] })));
 ok('twelve sections balance quickly', Date.now() - t0 < 500);
+
+// Regular sections sit under the month's own items, on both sides.
+const mixed = [
+  { heading: 'Ladies Conference', body: 'x'.repeat(300), rows: [] },
+  { heading: 'RBC Teens', body: 'x'.repeat(200), rows: [], standing: true },
+  { heading: 'Fall Program', body: 'x'.repeat(150), rows: [] },
+  { heading: 'School News', body: 'x'.repeat(400), rows: [], standing: true },
+  { heading: 'Kids Choir', body: 'x'.repeat(250), rows: [] },
+  { heading: 'Missions Spotlight', body: 'x'.repeat(120), rows: [], standing: true },
+  { heading: 'Soulwinning', body: 'x'.repeat(220), rows: [], standing: true },
+];
+const arr = arrangeColumns(mixed);
+const belowAll = (col) => {
+  const firstStanding = col.findIndex((c) => c.standing);
+  return firstStanding === -1 || col.slice(firstStanding).every((c) => c.standing);
+};
+ok('regular sections come after every particular one, left', belowAll(arr.left), arr.left.map((c) => c.heading));
+ok('regular sections come after every particular one, right', belowAll(arr.right), arr.right.map((c) => c.heading));
+ok('every mixed card is placed exactly once', arr.left.length + arr.right.length === mixed.length);
+ok('the two-group split is still close to even',
+  Math.abs(arr.leftHeight - arr.rightHeight) / Math.max(arr.leftHeight, arr.rightHeight) < 0.2,
+  { l: arr.leftHeight, r: arr.rightHeight });
+const plain = arrangeColumns(many);
+ok('with no flags the arrangement is the plain balance',
+  JSON.stringify(plain.left.map((c) => c.heading)) === JSON.stringify(bal.left.map((c) => c.heading)) &&
+  JSON.stringify(plain.right.map((c) => c.heading)) === JSON.stringify(bal.right.map((c) => c.heading)));
 
 // ----------------------------------------------------------------- parser
 console.log('\nNewsletter parser');

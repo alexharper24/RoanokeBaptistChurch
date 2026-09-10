@@ -82,6 +82,7 @@
           '<option value="accent-crimson">Crimson</option>' +
           '<option value="accent-teal">Teal</option>' +
         '</select>' +
+        '<label class="st-wrap" title="Regular sections sit below the month\'s own items on the page"><input class="st" type="checkbox"> Regular</label>' +
         '<button type="button" class="btn btn-x mv" data-dir="-1" aria-label="Move this section up" title="Move up">&#9650;</button>' +
         '<button type="button" class="btn btn-x mv" data-dir="1" aria-label="Move this section down" title="Move down">&#9660;</button>' +
         '<button type="button" class="btn btn-x" aria-label="Remove this section">Remove section</button>' +
@@ -102,6 +103,8 @@
 
     box.querySelector('.h').value = c.heading || '';
     box.querySelector('.a').value = c.accent || '';
+    box.querySelector('.st').checked = !!c.standing;
+    box.querySelector('.st').onchange = function () { markDirty(); schedulePreview(); };
     box.querySelector('.b').value = c.body || '';
     var rows = box.querySelector('.rows');
     (c.rows || []).forEach(function (r) { rows.appendChild(eventRow(r)); });
@@ -192,6 +195,7 @@
       return {
         heading: box.querySelector('.h').value.trim(),
         accent: box.querySelector('.a').value,
+        standing: box.querySelector('.st').checked,
         body: box.querySelector('.b').value.trim(),
         rows: readRows(box.querySelector('.rows')),
         image: box.dataset.image || null,
@@ -845,6 +849,13 @@
         return stems.some(function (st) { return st && (k.indexOf(st) === 0 || st.indexOf(k) === 0); });
       };
       var boxes = Array.prototype.slice.call($('cardList').children);
+      // Flag the regular sections and move them below the month's own items,
+      // which is the order the page will use.
+      boxes.forEach(function (box) {
+        var h = box.querySelector('.h').value;
+        if (h && isRecurring(h)) { box.querySelector('.st').checked = true; $('cardList').appendChild(box); }
+      });
+      boxes = Array.prototype.slice.call($('cardList').children);
       var best = null;
       boxes.forEach(function (box) {
         var h = box.querySelector('.h').value;

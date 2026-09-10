@@ -209,16 +209,38 @@ const RIGHT_WIDTH = 398;
 // pathological issue cannot hang the render.
 const EXHAUSTIVE_LIMIT = 14;
 
-export function balanceColumns(cards) {
+// The month's own items read first and the regular sections sit under them,
+// in both columns. Balancing everything as one set could not promise that: a
+// split that levelled the columns might well have opened the right-hand one
+// with RBC Teens. So the particular items are levelled first, then the regular
+// ones are levelled on top of those heights, and every regular card ends up
+// below every particular one whichever side it lands on. Cards with no flag
+// at all are treated as particular, so older issues render as they did.
+export function arrangeColumns(cards) {
+  const particular = cards.filter((c) => !c.standing);
+  const standing = cards.filter((c) => c.standing);
+  const top = balanceColumns(particular);
+  const bottom = balanceColumns(standing, top);
+  return {
+    left: top.left.concat(bottom.left),
+    right: top.right.concat(bottom.right),
+    leftHeight: bottom.leftHeight,
+    rightHeight: bottom.rightHeight,
+  };
+}
+
+export function balanceColumns(cards, start) {
   const n = cards.length;
-  if (n === 0) return { left: [], right: [], leftHeight: 0, rightHeight: 0 };
+  const lh0 = (start && start.leftHeight) || 0;
+  const rh0 = (start && start.rightHeight) || 0;
+  if (n === 0) return { left: [], right: [], leftHeight: lh0, rightHeight: rh0 };
 
   const hL = cards.map((c) => estimateCardHeight(c, LEFT_CHARS, LEFT_WIDTH));
   const hR = cards.map((c) => estimateCardHeight(c, RIGHT_CHARS, RIGHT_WIDTH));
 
   if (n > EXHAUSTIVE_LIMIT) {
     const left = [], right = [];
-    let lh = 0, rh = 0;
+    let lh = lh0, rh = rh0;
     cards.forEach((card, i) => {
       if (Math.max(lh + hL[i], rh) <= Math.max(lh, rh + hR[i])) { left.push(card); lh += hL[i]; }
       else { right.push(card); rh += hR[i]; }
@@ -228,7 +250,7 @@ export function balanceColumns(cards) {
 
   let best = null;
   for (let mask = 0; mask < 1 << n; mask++) {
-    let lh = 0, rh = 0;
+    let lh = lh0, rh = rh0;
     for (let i = 0; i < n; i++) {
       if (mask & (1 << i)) rh += hR[i];
       else lh += hL[i];
@@ -288,9 +310,9 @@ export function renderIssue(issue, opts = {}) {
   // The dated events list is a card like any other for layout purposes, so it
   // takes part in the balancing rather than always being forced into the left.
   const allCards = (issue.events || []).length
-    ? [{ heading: 'Upcoming Events', rows: issue.events, body: '' }].concat(issue.cards || [])
+    ? [{ heading: 'Upcoming Events', rows: issue.events, body: '', standing: true }].concat(issue.cards || [])
     : (issue.cards || []);
-  const cols = balanceColumns(allCards);
+  const cols = arrangeColumns(allCards);
   const left = cols.left.map(renderCard).join('\n');
   const right = cols.right.map(renderCard).join('\n');
 
