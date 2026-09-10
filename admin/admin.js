@@ -548,25 +548,39 @@
     });
     var html = '<div class="picfound"><h3>' + images.length + ' picture' +
       (images.length === 1 ? '' : 's') + ' found in the PDF</h3>' +
-      '<p>The importer reads text, so anything printed as a picture is not in the sections above. ' +
-      'Most of the time a picture like this <em>is</em> a section the importer ' +
-      'could not read, so it has nothing above to attach to: choose ' +
-      '<strong>New section from this picture</strong> and type the wording off ' +
-      'the picture. Only some can be named from the text, because the title is ' +
-      'usually inside the artwork rather than above it.' +
+      '<p>The words on each picture are read and it is placed for you: artwork with its own ' +
+      'title becomes a new section, and a photo that belongs inside a section goes there. ' +
+      'Anything it could not place has a dropdown. Sections made this way are marked amber ' +
+      'in the list: check their dates and times against the print before publishing.' +
       (images.furniture ? ' The church logo and ' + (images.furniture - 1 === 1 ? 'the QR code were' :
         (images.furniture - 1) + ' QR codes were') + ' left out automatically.' : '') +
       '</p><div class="picgrid">';
+    var unplaced = 0;
     images.forEach(function (im, i) {
-      var label = im.caption || 'Not named in the text';
-      html += '<div class="pic" data-pic-tile="' + i + '"><img src="' + im.url + '" alt="' + esc(label) + '">' +
-              '<strong' + (im.caption ? '' : ' class="unnamed"') + '>' + esc(label) + '</strong>' +
-              '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>' +
-              '<select data-pic="' + i + '">' + opts + '</select></div>';
+      var label = im.caption || (im.ocr && im.ocr.heading) || 'Not named in the text';
+      var named = !!(im.caption || (im.ocr && im.ocr.heading));
+      html += '<div class="pic' + (im.placed ? ' placed' : '') + '" data-pic-tile="' + i + '">' +
+              '<img src="' + im.url + '" alt="' + esc(label) + '">' +
+              '<strong' + (named ? '' : ' class="unnamed"') + '>' + esc(label) + '</strong>' +
+              '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>';
+      if (im.placed) {
+        html += '<span class="placed-in">Placed in <b>' + esc(im.placed) + '</b></span>';
+      } else {
+        unplaced++;
+        html += '<select data-pic="' + i + '">' + opts + '</select>';
+      }
+      html += '</div>';
     });
-    return html + '</div><div class="actions">' +
-      '<button type="button" class="btn" id="attachPics">Attach the chosen pictures</button>' +
-      '<span id="attachNote" class="note"></span></div></div>';
+    html += '</div>';
+    if (unplaced) {
+      html += '<div class="actions">' +
+        '<button type="button" class="btn" id="attachPics">Attach the chosen pictures</button>' +
+        '<span id="attachNote" class="note"></span></div>';
+    } else {
+      html += '<div class="actions"><span id="attachNote" class="note ok">Every picture has a home. ' +
+        'To move one, remove it from its section and choose again here.</span></div>';
+    }
+    return html + '</div>';
   }
 
   // Have the words read off each picture. The text layer cannot name most of
@@ -574,6 +588,11 @@
   // a picture into a section without anyone typing. Runs after the picker is on
   // screen and fills the labels in as each one lands, so nobody waits on it.
   function readPictures(images) {
+    var left = images.length;
+    var settle = function () {
+      left--;
+      if (left === 0) autoPlace(images);
+    };
     images.forEach(function (im, i) {
       var tile = document.querySelector('#importSummary .pic[data-pic-tile="' + i + '"]');
       var label = tile ? tile.querySelector('strong') : null;
@@ -594,7 +613,8 @@
           if (!label) return;
           label.textContent = im.caption || 'Not named in the text';
           label.className = im.caption ? '' : 'unnamed';
-        });
+        })
+        .then(settle);
     });
   }
 
@@ -620,11 +640,17 @@
         'or combine them into a single picture first.', 'bad');
       return;
     }
-    note($('attachNote'), 'Uploading ' + picks.length + '...');
+    return placePicks(picks, images, $('attachNote'));
+  }
+
+  // Upload each picked picture and put it where it goes. `to` is 'feature',
+  // 'new', or a section index as a string.
+  function placePicks(picks, images, noteEl) {
+    note(noteEl, 'Uploading ' + picks.length + '...');
     var done = 0;
     var made = 0;
     var readCount = 0;
-    picks.reduce(function (chain, pick) {
+    return picks.reduce(function (chain, pick) {
       return chain.then(function () {
         var file = new File([pick.im.blob], 'pdf-picture-' + (done + 1) + '.png', { type: 'image/png' });
         var target = pick.to;
@@ -645,6 +671,8 @@
           target = String($('cardList').children.length - 1);
           made++;
         }
+        pick.im.placed = target === 'feature' ? 'the featured item'
+          : ($('cardList').children[Number(target)].querySelector('.h').value || ('section ' + (Number(target) + 1)));
         var slot = target === 'feature' ? null : 'sec' + (Number(target) + 1);
         return upload(file, 'image', slot).then(function (r) {
           if (target === 'feature') {
@@ -679,12 +707,60 @@
                  '. Check every date and time against the print before publishing.'
                      : '. Type the heading and wording off each picture.');
       }
-      note($('attachNote'), msg + ' Check the preview below.', 'ok');
+      note(noteEl, msg + ' Check the preview.', 'ok');
       markDirty();
       schedulePreview();
+      // Redraw so placed pictures say where they went and lose their dropdown.
+      var picker = document.querySelector('#importSummary .picfound');
+      if (picker) {
+        picker.outerHTML = renderPicturePicker(images);
+        var btn = $('attachPics');
+        if (btn) btn.onclick = function () { attachPictures(images); };
+        var n = $('attachNote');
+        if (n) note(n, msg, 'ok');
+      }
     }).catch(function (e) {
-      note($('attachNote'), e.message, 'bad');
+      note(noteEl, e.message, 'bad');
     });
+  }
+
+  // Once every picture has been read, place the ones whose home is obvious,
+  // so a normal month needs no choosing at all:
+  //   - a caption off the text layer that names an existing section, or sits
+  //     inside its wording, goes to that section (the packet photos land in
+  //     Missions Spotlight this way);
+  //   - artwork with a transcribed heading and nothing to match becomes its
+  //     own section, heading and lines filled in;
+  //   - anything else is left in the picker with a dropdown.
+  // A section holds one picture, so the largest claimant wins and the rest
+  // stay in the picker rather than overwrite it.
+  function autoPlace(images) {
+    if (!$('issueMonth').value) return Promise.resolve();
+    var boxes = Array.prototype.slice.call($('cardList').children);
+    var taken = {};
+    boxes.forEach(function (b, i) { if (b.dataset.image) taken[i] = true; });
+    var picks = [];
+    images.forEach(function (im) {
+      if (im.placed) return;
+      var cap = (im.caption || '').trim().toLowerCase();
+      if (cap) {
+        var hit = -1;
+        boxes.forEach(function (b, i) {
+          if (hit !== -1) return;
+          var h = (b.querySelector('.h').value || '').trim().toLowerCase();
+          var body = (b.querySelector('.b').value || '').toLowerCase();
+          if (h === cap || (cap.length >= 6 && body.indexOf(cap) !== -1)) hit = i;
+        });
+        if (hit !== -1 && !taken[hit]) { taken[hit] = true; picks.push({ im: im, to: String(hit) }); return; }
+        // Captioned means the text above it describes it, so it belongs inside
+        // existing wording, never as a section of its own. If its section is
+        // already full, or nothing matched, a human decides.
+        return;
+      }
+      if (im.ocr && im.ocr.heading) picks.push({ im: im, to: 'new' });
+    });
+    if (!picks.length) return Promise.resolve();
+    return placePicks(picks, images, $('attachNote') || $('importNote'));
   }
 
   $('importPdf').onchange = function () {
@@ -840,7 +916,9 @@ function upload(file, kind, slot) {
       doc.open();
       doc.write('<!doctype html><html lang="en"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="stylesheet" href="/style.css?v=33"></head>' +
+        // Always the current stylesheet. A pinned number here drifted from the
+        // site's own within a week; the preview is admin-only, so no caching.
+        '<link rel="stylesheet" href="/style.css?v=' + Date.now() + '"></head>' +
         '<body><main><div id="torchPage"><section class="section"><div class="container">' +
         r.html + '</div></section></div></main></body></html>');
       doc.close();
@@ -858,11 +936,22 @@ function upload(file, kind, slot) {
     var panel = $('previewPanel');
     panel.hidden = !panel.hidden;
     this.textContent = panel.hidden ? 'Show preview' : 'Hide preview';
-    if (!panel.hidden) {
-      renderPreview();
-      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    if (!panel.hidden) renderPreview();
   };
+
+  // Desktop preview: the site's layout switches to one column under 900px,
+  // and the right-hand column is narrower than that. Draw the page at its
+  // real 1180px and scale it to fit, so what is shown is the desktop layout.
+  function fitPreview() {
+    var wrap = $('frameWrap');
+    var frame = $('previewFrame');
+    if (!wrap || !frame) return;
+    if (wrap.classList.contains('phone')) { frame.style.zoom = ''; return; }
+    var avail = wrap.clientWidth;
+    frame.style.zoom = avail > 0 && avail < 1180 ? String(avail / 1180) : '';
+  }
+  if (window.ResizeObserver) new ResizeObserver(fitPreview).observe($('frameWrap'));
+  window.addEventListener('resize', fitPreview);
   $('previewLive').onchange = function () { if (this.checked) renderPreview(); };
   $('previewRefresh').onclick = function () { renderPreview(); };
 
@@ -872,8 +961,10 @@ function upload(file, kind, slot) {
     $('frameWrap').className = 'frame-wrap' + (phone ? ' phone' : '');
     $('previewPhone').classList.toggle('active', phone);
     $('previewDesktop').classList.toggle('active', !phone);
+    fitPreview();
     renderPreview();
   }
+  fitPreview();
   $('previewDesktop').onclick = function () { setWidth(false); };
   $('previewPhone').onclick = function () { setWidth(true); };
 

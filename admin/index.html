@@ -9,7 +9,7 @@
   <title>The Torch, Editor | Roanoke Baptist Church</title>
   <link rel="icon" href="favicon.ico?v=1" sizes="any">
   <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/admin/admin.css?v=11">
+  <link rel="stylesheet" href="/admin/admin.css?v=12">
 </head>
 <body>
 
@@ -33,6 +33,8 @@
 
   <div id="banner" class="banner" hidden></div>
 
+  <div class="cols">
+    <div class="col col-edit">
   <!-- ISSUE PICKER ------------------------------------------------------- -->
   <section class="panel">
     <h2>Which issue</h2>
@@ -53,33 +55,6 @@
         <small>Drafts are saved but not visible to the public.</small>
       </label>
     </div>
-  </section>
-
-  <!-- IMPORT --------------------------------------------------------------- -->
-  <section class="panel">
-    <h2>Start from this month's Torch <span class="opt">recommended</span></h2>
-    <p class="help">Choose the PDF and it fills in the month, the verse, the dated events, and the sections. Read through afterwards and fix anything it got wrong. Nothing is saved or published until you say so.</p>
-    <div class="row">
-      <label class="field">
-        <span>The Torch PDF</span>
-        <input type="file" id="importPdf" accept="application/pdf">
-        <small>It also keeps a copy of the PDF on file for the church.</small>
-      </label>
-    </div>
-    <div class="actions">
-      <span id="importNote" class="note"></span>
-    </div>
-    <div id="importSummary" class="summary" hidden></div>
-
-    <details class="fallback">
-      <summary>Or paste the text instead</summary>
-      <p class="help">If the PDF will not read, open the Torch document, select everything, copy, and paste it here.</p>
-      <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
-      <div class="actions">
-        <button type="button" class="btn" id="parseBtn">Fill in from this text</button>
-        <span id="parseNote" class="note"></span>
-      </div>
-    </details>
   </section>
 
   <!-- MASTHEAD ----------------------------------------------------------- -->
@@ -156,14 +131,43 @@
   <!-- SAVE --------------------------------------------------------------- -->
   <section class="panel sticky">
     <div class="save-row">
-      <button type="button" class="btn" id="previewBtn">Show preview</button>
+      <button type="button" class="btn" id="previewBtn">Hide preview</button>
       <button type="button" class="btn" id="draftBtn">Save as draft</button>
       <button type="button" class="btn btn-primary" id="publishBtn">Publish to the website</button>
       <span id="saveNote" class="note"></span>
     </div>
   </section>
 
-  <section class="panel wide" id="previewPanel" hidden>
+    </div>
+    <div class="col col-side">
+  <!-- IMPORT --------------------------------------------------------------- -->
+  <section class="panel">
+    <h2>Start from this month's Torch <span class="opt">recommended</span></h2>
+    <p class="help">Choose the PDF and it fills in the month, the verse, the dated events, and the sections. Read through afterwards and fix anything it got wrong. Nothing is saved or published until you say so.</p>
+    <div class="row">
+      <label class="field">
+        <span>The Torch PDF</span>
+        <input type="file" id="importPdf" accept="application/pdf">
+        <small>It also keeps a copy of the PDF on file for the church.</small>
+      </label>
+    </div>
+    <div class="actions">
+      <span id="importNote" class="note"></span>
+    </div>
+    <div id="importSummary" class="summary" hidden></div>
+
+    <details class="fallback">
+      <summary>Or paste the text instead</summary>
+      <p class="help">If the PDF will not read, open the Torch document, select everything, copy, and paste it here.</p>
+      <textarea id="pasteBox" rows="6" placeholder="Paste the newsletter text here"></textarea>
+      <div class="actions">
+        <button type="button" class="btn" id="parseBtn">Fill in from this text</button>
+        <span id="parseNote" class="note"></span>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel" id="previewPanel">
     <div class="preview-head">
       <h2>Preview</h2>
       <label class="live"><input type="checkbox" id="previewLive" checked> Update as I type</label>
@@ -177,6 +181,9 @@
     <p class="help">This is the real page, drawn by the same code the website uses. Nothing here is visible to anyone until you publish.</p>
     <div class="frame-wrap" id="frameWrap"><iframe id="previewFrame" title="Preview of the Torch page"></iframe></div>
   </section>
+
+    </div>
+  </div>
 
 </main>
 
@@ -195,6 +202,6 @@
 </div>
 
 <script src="/admin/parse-torch.js?v=2"></script>
-<script src="/admin/admin.js?v=10"></script>
+<script src="/admin/admin.js?v=11"></script>
 </body>
 </html>

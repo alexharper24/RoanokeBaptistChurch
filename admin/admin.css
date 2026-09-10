@@ -32,7 +32,7 @@ body {
 
 /* Header */
 .bar { background: var(--navy); color: #fff; }
-.bar-inner { max-width: 960px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.bar-inner { max-width: none; margin: 0; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .bar-title { display: flex; align-items: center; gap: 12px; }
 .bar-title img { width: 38px; height: 38px; object-fit: contain; }
 .bar-title strong { display: block; font-size: 1.05rem; }
@@ -42,7 +42,19 @@ body {
 .who { color: #c9cede; }
 
 /* Layout */
-.wrap { max-width: 960px; margin: 0 auto; padding: 22px 20px 80px; }
+/* Full width, two columns. The editing goes on the left, the import and the
+   live preview on the right, so the words being typed and the page they make
+   are on screen together. Below 1100px it stacks, import first. */
+.wrap { max-width: none; margin: 0; padding: 22px 28px 80px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 22px; align-items: start; }
+.col { min-width: 0; }
+.col-side { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; padding-right: 2px; }
+@media (max-width: 1100px) {
+  .cols { grid-template-columns: 1fr; }
+  .col-side { position: static; max-height: none; overflow: visible; order: -1; }
+  .wrap { padding: 18px 16px 60px; }
+  .bar-inner { padding: 12px 16px; }
+}
 .panel { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
 .panel h2 { font-size: 1.1rem; margin: 0 0 4px; color: var(--navy); }
 .opt { font-size: 0.78rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-left: 6px; }
@@ -126,7 +138,10 @@ textarea { resize: vertical; line-height: 1.5; }
    under the site's 900px breakpoint, so the preview always showed the phone
    layout. Let the preview panel break out of the column so a desktop preview
    is actually desktop width. */
-.panel.wide { width: min(1320px, 96vw); margin-left: calc(50% - min(660px, 48vw)); }
+/* The preview iframe is drawn at the site's real desktop width and scaled to
+   the column by fitPreview() in admin.js, so the desktop layout shows even
+   though the column is under the site's 900px breakpoint. */
+.frame-wrap:not(.phone) iframe { width: 1180px; max-width: none; }
 .widths { display: inline-flex; gap: 0; }
 .widths .btn-x { border-radius: 0; }
 .widths .btn-x:first-child { border-radius: 8px 0 0 8px; }
@@ -135,7 +150,8 @@ textarea { resize: vertical; line-height: 1.5; }
 .frame-wrap { display: flex; justify-content: center; }
 .frame-wrap.phone iframe { width: 390px; max-width: 100%; border-radius: 18px; }
 
-iframe { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+iframe { width: 100%; height: 72vh; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: block; }
+.frame-wrap { overflow: hidden; }
 
 /* Modal */
 /* An author `display` beats the browser's [hidden] rule, so setting .hidden in
@@ -188,3 +204,9 @@ iframe { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius
   content: "Read off the picture. Check every date and time against the print.";
   flex: 1 1 100%; color: var(--warn); font-size: 0.82rem; font-weight: 600;
 }
+
+/* A picture the import placed on its own. */
+.pic.placed { border-color: #bfe3cd; background: #f3faf5; }
+.pic .placed-in { font-size: 0.84rem; color: #1c6b41; padding: 8px 0 2px; }
+.pic .placed-in b { font-weight: 700; }
+.note.ok { color: #1c6b41; }
