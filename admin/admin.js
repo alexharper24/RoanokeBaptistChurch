@@ -327,6 +327,109 @@
   // biggest first.
   var MIN_PIC = 60;
 
+  // The church logo and the two QR codes are in every issue and are never what
+  // anyone wants to place, but they are the same size as real content: the QR
+  // codes measure 116 and 150 square, the gel-pen photo 109 by 126. Size cannot
+  // separate them. Colour can. Measured across the September issue, the logo
+  // and both QR codes are pure greyscale, every sampled pixel with its three
+  // channels equal, while the least colourful real picture still reads 0.098
+  // mean saturation. So: no colour anywhere means page furniture.
+  function isGreyscale(cv) {
+    var ctx = cv.getContext('2d');
+    var d;
+    try { d = ctx.getImageData(0, 0, cv.width, cv.height).data; } catch (e) { return false; }
+    var checked = 0;
+    var coloured = 0;
+    var step = 4 * Math.max(1, Math.floor((cv.width * cv.height) / 4000));
+    for (var i = 0; i < d.length; i += step) {
+      if (d[i + 3] < 8) continue;
+      var mx = Math.max(d[i], d[i + 1], d[i + 2]);
+      var mn = Math.min(d[i], d[i + 1], d[i + 2]);
+      if (mx - mn > 10) coloured++;
+      checked++;
+    }
+    return checked > 0 && (coloured / checked) < 0.01;
+  }
+
+  // Where an image sits on the page, so it can be captioned with the words
+  // printed nearest to it. pdf.js hands back a flat operator list, so the
+  // current transform has to be tracked by hand through save/restore.
+  function mul(m, n) {
+    return [
+      m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1],
+      m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3],
+      m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5],
+    ];
+  }
+
+  function boxOf(m) {
+    var xs = [m[4], m[0] + m[4], m[2] + m[4], m[0] + m[2] + m[4]];
+    var ys = [m[5], m[1] + m[5], m[3] + m[5], m[1] + m[3] + m[5]];
+    return {
+      x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs),
+      y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys),
+    };
+  }
+
+  // Caption an image with the printed words directly above it, but only when
+  // those words are plainly a label for it.
+  //
+  // This is deliberately conservative, because a confident wrong caption is
+  // worse than none. Most of the artwork in this newsletter carries its own
+  // title inside the picture: the Ladies' Conference poster says LADIES'
+  // CONFERENCE in the image, and the words above it in the layout belong to
+  // the school news in the next column. A first attempt captioned that poster
+  // "Happy Anniversary" off the nearest heading. So a candidate has to sit
+  // right on top of the image, overlap it horizontally, read like a label
+  // rather than a sentence, and never be a line from the birthday or
+  // anniversary lists.
+  var CAPTION_GAP = 42;
+  var PERSONAL_LINE = /\b(happy\s+)?(birthday|anniversar(y|ies))\b|[A-Za-z].*\d{1,2}\s*\/\s*\d{1,2}\s*$/i;
+
+  function captionFor(box, lines) {
+    var TP = window.TorchParse;
+    var best = null;
+    lines.forEach(function (ln) {
+      var t = (ln.text || '').trim();
+      if (t.length < 4 || t.length > 45) return;
+      if (Math.min(ln.x1, box.x1) - Math.max(ln.x, box.x0) <= 0) return;  // must sit over it
+      var gap = ln.y - box.y1;                                            // PDF y grows upward
+      if (gap < -2 || gap > CAPTION_GAP) return;
+      if (/[.!?]$/.test(t)) return;                    // a sentence is body copy, not a label
+      // A line starting lower case is the middle of a wrapped sentence in the
+      // next column, not a title. This is what stopped the Kid's Choir panel
+      // being captioned "the Blazers volleyball schedule and come out".
+      if (!/^[A-Z0-9]/.test(t)) return;
+      if (PERSONAL_LINE.test(t)) return;               // never lift a member's name and date
+      var heading = TP && TP.isHeading ? TP.isHeading(t) : false;
+      var score = gap - (heading ? 60 : 0);
+      if (!best || score < best.score) best = { score: score, text: t, heading: heading };
+    });
+    if (!best) return '';
+    var out = best.heading && TP && TP.tidyHeading ? TP.tidyHeading(best.text) : best.text;
+    return out.replace(/\s+/g, ' ').replace(/[:\u2014\u2013-]\s*$/, '').trim();
+  }
+
+  // Rebuild page text as positioned lines, for captioning.
+  function linesOf(tc) {
+    var lines = [];
+    var cur = null;
+    tc.items.forEach(function (it) {
+      if (!it.str || !it.str.trim()) return;
+      var x = it.transform[4];
+      var y = it.transform[5];
+      if (cur && Math.abs(y - cur.y) < 3) {
+        cur.text += (x - cur.x1 > 0.9 ? ' ' : '') + it.str;
+        cur.x1 = x + (it.width || 0);
+      } else {
+        cur = { text: it.str, x: x, x1: x + (it.width || 0), y: y };
+        lines.push(cur);
+      }
+    });
+    lines.forEach(function (l) { l.text = l.text.replace(/\s+/g, ' ').trim(); });
+    return lines;
+  }
+
   function drawImage(img) {
     var cv = document.createElement('canvas');
     cv.width = img.width;
@@ -372,14 +475,26 @@
     for (var n = 1; n <= doc.numPages; n++) pages.push(n);
     return Promise.all(pages.map(function (n) {
       return doc.getPage(n).then(function (page) {
-        return page.getOperatorList().then(function (ops) {
+        return Promise.all([page.getOperatorList(), page.getTextContent()]).then(function (both) {
+          var ops = both[0];
+          var lines = linesOf(both[1]);
           var wanted = [];
+          var seenId = {};
+          var ctm = [1, 0, 0, 1, 0, 0];
+          var stack = [];
           for (var i = 0; i < ops.fnArray.length; i++) {
-            if (ops.fnArray[i] !== lib.OPS.paintImageXObject && ops.fnArray[i] !== lib.OPS.paintJpegXObject) continue;
+            var fn = ops.fnArray[i];
+            if (fn === lib.OPS.save) { stack.push(ctm.slice()); continue; }
+            if (fn === lib.OPS.restore) { ctm = stack.pop() || [1, 0, 0, 1, 0, 0]; continue; }
+            if (fn === lib.OPS.transform) { ctm = mul(ctm, ops.argsArray[i]); continue; }
+            if (fn !== lib.OPS.paintImageXObject && fn !== lib.OPS.paintJpegXObject) continue;
             var id = ops.argsArray[i][0];
-            if (typeof id === 'string' && wanted.indexOf(id) === -1) wanted.push(id);
+            if (typeof id !== 'string' || seenId[id]) continue;
+            seenId[id] = true;
+            wanted.push({ id: id, box: boxOf(ctm) });
           }
-          return Promise.all(wanted.map(function (id) {
+          return Promise.all(wanted.map(function (w) {
+            var id = w.id;
             return new Promise(function (res) {
               try {
                 if (page.objs.has(id)) res(page.objs.get(id));
@@ -389,9 +504,11 @@
               if (!img || !img.width || img.width < MIN_PIC || img.height < MIN_PIC) return null;
               var cv = drawImage(img);
               if (!cv) return null;
+              if (isGreyscale(cv)) return { furniture: true };
+              var caption = captionFor(w.box, lines);
               return new Promise(function (res) {
                 cv.toBlob(function (blob) {
-                  res(blob ? { blob: blob, url: URL.createObjectURL(blob), w: img.width, h: img.height, page: n } : null);
+                  res(blob ? { blob: blob, url: URL.createObjectURL(blob), w: img.width, h: img.height, page: n, caption: caption } : null);
                 }, 'image/png');
               });
             }).catch(function () { return null; });
@@ -400,10 +517,16 @@
       }).catch(function () { return []; });
     })).then(function (perPage) {
       var all = [];
+      var furniture = 0;
       perPage.forEach(function (list) {
-        list.forEach(function (x) { if (x) all.push(x); });
+        list.forEach(function (x) {
+          if (!x) return;
+          if (x.furniture) { furniture++; return; }
+          all.push(x);
+        });
       });
       all.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
+      all.furniture = furniture;
       return all;
     });
   }
@@ -420,10 +543,15 @@
     var html = '<div class="picfound"><h3>' + images.length + ' picture' +
       (images.length === 1 ? '' : 's') + ' found in the PDF</h3>' +
       '<p>The importer reads text, so anything printed as a picture is not in the sections above. ' +
-      'Choose where each one belongs. The church logo and the QR codes come through here too, ' +
-      'so leave those on Skip.</p><div class="picgrid">';
+      'Choose where each one belongs. Most artwork carries its title inside the ' +
+      'picture rather than above it, so only some can be named from the text.' +
+      (images.furniture ? ' The church logo and ' + (images.furniture - 1 === 1 ? 'the QR code were' :
+        (images.furniture - 1) + ' QR codes were') + ' left out automatically.' : '') +
+      '</p><div class="picgrid">';
     images.forEach(function (im, i) {
-      html += '<div class="pic"><img src="' + im.url + '" alt="Picture ' + (i + 1) + ' from the PDF">' +
+      var label = im.caption || 'Not named in the text';
+      html += '<div class="pic"><img src="' + im.url + '" alt="' + label.replace(/[<>&"]/g, '') + '">' +
+              '<strong' + (im.caption ? '' : ' class="unnamed"') + '>' + label.replace(/[<>&]/g, '') + '</strong>' +
               '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>' +
               '<select data-pic="' + i + '">' + opts + '</select></div>';
     });
