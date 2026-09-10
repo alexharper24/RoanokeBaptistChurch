@@ -49,6 +49,12 @@
 			"database_id": "d5334897-6d91-4250-aecc-3bec84e70c5c"
 		}
 	],
+	// Reading the words off artwork in an imported PDF. The newsletter puts a
+	// whole section inside a picture, which the text layer does not carry, so
+	// without this the editor has to retype it. No setup beyond this binding.
+	"ai": {
+		"binding": "AI"
+	},
 	// Uploaded PDFs and feature graphics. Create with:  wrangler r2 bucket create roanoke-torch-files
 	"r2_buckets": [
 		{

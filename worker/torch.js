@@ -576,6 +576,77 @@ export async function handleAdminApi(request, env, url, actor) {
     return json({ ok: true, key });
   }
 
+  // Read the words off a picture, so a section printed as artwork does not have
+  // to be retyped. This is the difference between an import that leaves three
+  // sections to key in by hand and one that leaves them to proofread.
+  //
+  // Model choice was measured against the September 2026 issue, not guessed:
+  //   moondream3.1  returned an empty object for every input shape tried
+  //   llava-1.5-7b  read some words, then invented twelve calendar rows that
+  //                 were not in the picture, and moved the month
+  //   llama-3.2-11b needs a one-time licence acceptance on the account
+  //   qwen3.8-27b   transcribed all three artwork panels exactly
+  //
+  // The prompt is deliberately flat. An earlier version said "largest heading
+  // first", and the model spent its whole token budget reasoning about what
+  // that meant on a poster whose title sits in the middle, then returned an
+  // empty string. Ask for reading order and it just reads.
+  //
+  // It is still a machine reading a picture. The wording lands in an editable
+  // field and the admin page says to check it against the print.
+  if (path === '/api/admin/ocr' && request.method === 'POST') {
+    if (!env.AI) return json({ error: 'Text recognition is not switched on for this site.' }, 501);
+    const form = await request.formData();
+    const file = form.get('file');
+    if (!file || typeof file === 'string') return json({ error: 'No picture was attached.' }, 400);
+    if (file.size > MAX_IMAGE_BYTES) {
+      return json({ error: `That picture is ${(file.size / 1048576).toFixed(1)} MB. The limit is ${MAX_IMAGE_BYTES / 1048576} MB.` }, 413);
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      return json({ error: 'Use a JPG, PNG, or WEBP image.' }, 415);
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+    }
+    const dataUri = `data:${file.type};base64,${btoa(binary)}`;
+
+    try {
+      const out = await env.AI.run('@cf/qwen/qwen3.8-27b', {
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text:
+              'Transcribe the text in this image exactly as printed, in reading order, ' +
+              'one line per line of text. Output only the transcription. Do not write ' +
+              'any line that is not visible in the image.' },
+            { type: 'image_url', image_url: { url: dataUri } },
+          ],
+        }],
+        // This model thinks before it answers, and the thinking comes out of the
+        // same budget. 1200 leaves room for both on a busy poster; the largest
+        // of the September panels used 259.
+        max_tokens: 1200,
+        temperature: 0,
+      });
+      const choice = out && out.choices && out.choices[0];
+      const raw = String(
+        (choice && choice.message && choice.message.content) || out.response || out.answer || ''
+      ).trim();
+      const lines = raw.split(/\r?\n/).map((l) => l.replace(/^[-*\u2022]\s*/, '').trim()).filter(Boolean);
+      return json({
+        ok: true,
+        heading: lines.length ? lines[0].slice(0, 80) : '',
+        body: lines.slice(1).join('\n'),
+        text: raw,
+      });
+    } catch (e) {
+      return json({ error: 'Could not read the text: ' + (e && e.message ? e.message : 'unknown error') }, 502);
+    }
+  }
+
   // Admin-side file read: an editor can always see what they uploaded, even
   // for a draft or a PDF that is not public.
   const fm = path.match(/^\/api\/admin\/file\/(.+)$/);

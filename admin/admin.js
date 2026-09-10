@@ -559,7 +559,7 @@
       '</p><div class="picgrid">';
     images.forEach(function (im, i) {
       var label = im.caption || 'Not named in the text';
-      html += '<div class="pic"><img src="' + im.url + '" alt="' + esc(label) + '">' +
+      html += '<div class="pic" data-pic-tile="' + i + '"><img src="' + im.url + '" alt="' + esc(label) + '">' +
               '<strong' + (im.caption ? '' : ' class="unnamed"') + '>' + esc(label) + '</strong>' +
               '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>' +
               '<select data-pic="' + i + '">' + opts + '</select></div>';
@@ -567,6 +567,35 @@
     return html + '</div><div class="actions">' +
       '<button type="button" class="btn" id="attachPics">Attach the chosen pictures</button>' +
       '<span id="attachNote" class="note"></span></div></div>';
+  }
+
+  // Have the words read off each picture. The text layer cannot name most of
+  // this artwork, because the title is printed inside it, so this is what turns
+  // a picture into a section without anyone typing. Runs after the picker is on
+  // screen and fills the labels in as each one lands, so nobody waits on it.
+  function readPictures(images) {
+    images.forEach(function (im, i) {
+      var tile = document.querySelector('#importSummary .pic[data-pic-tile="' + i + '"]');
+      var label = tile ? tile.querySelector('strong') : null;
+      if (label && !im.caption) { label.textContent = 'Reading the words...'; label.className = 'reading'; }
+      var fd = new FormData();
+      fd.append('file', new File([im.blob], 'picture.png', { type: 'image/png' }));
+      api('/api/admin/ocr', { method: 'POST', body: fd })
+        .then(function (r) {
+          im.ocr = r;
+          if (!label) return;
+          // A caption off the text layer is the printed word for word, so it
+          // wins. OCR fills the gap where there was no caption at all.
+          var shown = im.caption || r.heading;
+          if (shown) { label.textContent = shown; label.className = ''; }
+          else { label.textContent = 'No words found'; label.className = 'unnamed'; }
+        })
+        .catch(function () {
+          if (!label) return;
+          label.textContent = im.caption || 'Not named in the text';
+          label.className = im.caption ? '' : 'unnamed';
+        });
+    });
   }
 
   function attachPictures(images) {
@@ -594,6 +623,7 @@
     note($('attachNote'), 'Uploading ' + picks.length + '...');
     var done = 0;
     var made = 0;
+    var readCount = 0;
     picks.reduce(function (chain, pick) {
       return chain.then(function () {
         var file = new File([pick.im.blob], 'pdf-picture-' + (done + 1) + '.png', { type: 'image/png' });
@@ -601,9 +631,17 @@
         // A new section has to exist before the upload, so the slot name matches
         // the position the renderer will read it back from.
         if (target === 'new') {
-          var fresh = cardEditor({ heading: pick.im.caption || '' });
+          var read = pick.im.ocr || {};
+          var fresh = cardEditor({
+            heading: pick.im.caption || read.heading || '',
+            // Every line after the heading, as separate points, which is how
+            // these panels read: a time, an age range, a date.
+            body: (read.body || '').split(/\n/).filter(Boolean)
+              .map(function (l) { return '- ' + l; }).join('\n'),
+          });
           $('cardList').appendChild(fresh);
-          fresh.classList.add('needs-text');
+          if (read.heading || read.body) { fresh.classList.add('needs-check'); readCount++; }
+          else { fresh.classList.add('needs-text'); }
           target = String($('cardList').children.length - 1);
           made++;
         }
@@ -636,8 +674,10 @@
     }, Promise.resolve()).then(function () {
       var msg = 'Attached ' + done + '.';
       if (made) {
-        msg += ' ' + made + ' new section' + (made === 1 ? '' : 's') +
-               ' added at the bottom, marked in red. Type the heading and wording off each picture.';
+        msg += ' ' + made + ' new section' + (made === 1 ? '' : 's') + ' added at the bottom' +
+               (readCount ? ', filled in from the words on the picture' + (readCount === 1 ? '' : 's') +
+                 '. Check every date and time against the print before publishing.'
+                     : '. Type the heading and wording off each picture.');
       }
       note($('attachNote'), msg + ' Check the preview below.', 'ok');
       markDirty();
@@ -663,6 +703,7 @@
         if (got.images.length) {
           $('importSummary').innerHTML += renderPicturePicker(got.images);
           $('attachPics').onclick = function () { attachPictures(got.images); };
+          readPictures(got.images);
         }
         note($('importNote'), 'Read the PDF. Now saving a copy...');
         // Keep the PDF on file too, so this is one step rather than two.
