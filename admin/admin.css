@@ -225,3 +225,7 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--line); border-radius
    below the month's own items, in both columns. */
 .card-edit .st-wrap { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--muted); white-space: nowrap; padding: 0 6px; cursor: pointer; }
 .card-edit .st-wrap input { width: 16px; height: 16px; margin: 0; }
+
+/* The daily allowance for reading words off pictures is spent. Everything
+   still works; the wording has to be typed until it resets. */
+.picfound .quota { color: var(--warn); }

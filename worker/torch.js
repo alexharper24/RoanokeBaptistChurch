@@ -713,7 +713,17 @@ export async function handleAdminApi(request, env, url, actor) {
         text: raw,
       });
     } catch (e) {
-      return json({ error: 'Could not read the text: ' + (e && e.message ? e.message : 'unknown error') }, 502);
+      const msg = (e && e.message) || 'unknown error';
+      // Workers AI 4006 is the daily free neuron allowance. It is a state the
+      // editor has to explain, not a generic failure: everything still works,
+      // the words just have to be typed until the allowance resets.
+      const outOfQuota = /\b4006\b|daily free allocation|neurons/i.test(msg);
+      return json({
+        error: outOfQuota
+          ? 'Text recognition has used up its free allowance for today. Place the pictures and type their wording; it resets tomorrow.'
+          : 'Could not read the text: ' + msg,
+        quota: outOfQuota || undefined,
+      }, outOfQuota ? 429 : 502);
     }
   }
 

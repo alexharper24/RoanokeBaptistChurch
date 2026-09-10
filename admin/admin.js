@@ -638,16 +638,28 @@
   // screen and fills the labels in as each one lands, so nobody waits on it.
   function readPictures(images) {
     var left = images.length;
+    var stopped = false;
     var settle = function () {
       left--;
       if (left === 0) autoPlace(images);
       else next();
     };
-    // Two pictures at a time. Five at once made the model time out on two of
-    // them even with a retry; two keeps every one under its limit, and the
-    // labels still fill in as they land.
-    var queue = images.map(function (im, i) { return { im: im, i: i }; });
-    var next = function () { var q = queue.shift(); if (q) readOne(q.im, q.i); };
+    // A picture the text layer already named does not need reading: that
+    // caption is the printed word for word and wins anyway. On the September
+    // issue that is two of the five calls saved.
+    var queue = [];
+    images.forEach(function (im, i) {
+      if (im.caption) { im.ocr = { heading: im.caption, body: '', lines: [] }; left--; }
+      else queue.push({ im: im, i: i });
+    });
+    if (!queue.length) { autoPlace(images); return; }
+    // Two at a time. Five at once made the model time out on two of them even
+    // with a retry; two keeps every one under its limit.
+    var next = function () {
+      if (stopped) return;
+      var q = queue.shift();
+      if (q) readOne(q.im, q.i);
+    };
     var readOne = function (im, i) {
       var tile = document.querySelector('#importSummary .pic[data-pic-tile="' + i + '"]');
       var label = tile ? tile.querySelector('strong') : null;
@@ -667,7 +679,23 @@
           if (shown) { label.textContent = shown; label.className = ''; }
           else { label.textContent = 'No words found'; label.className = 'unnamed'; }
         })
-        .catch(function () {
+        .catch(function (e) {
+          // Out of allowance: there is no point asking for the rest, and the
+          // editor needs to know why nothing is being named.
+          if (e && /free allowance for today/.test(e.message || '')) {
+            stopped = true;
+            queue.length = 0;
+            var box = document.querySelector('.picfound p');
+            if (box && !box.dataset.quota) {
+              box.dataset.quota = '1';
+              box.innerHTML = '<strong class="quota">' + esc(e.message) + '</strong> ' +
+                'Choose where each picture goes below; a new section starts empty for you to type.';
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('#importSummary .pic strong.reading'), function (el) {
+              el.textContent = 'Not named in the text';
+              el.className = 'unnamed';
+            });
+          }
           if (!label) return;
           label.textContent = im.caption || 'Not named in the text';
           label.className = im.caption ? '' : 'unnamed';
