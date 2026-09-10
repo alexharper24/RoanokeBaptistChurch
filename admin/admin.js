@@ -533,25 +533,34 @@
 
   // Thumbnails plus a destination for each. Nothing is attached until the
   // button is pressed, so a wrong guess here costs nothing.
+  function esc(t) {
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   function renderPicturePicker(images) {
     if (!images.length) return '';
-    var opts = '<option value="">Skip</option><option value="feature">Featured item</option>';
+    var opts = '<option value="">Skip</option>' +
+      '<option value="new">New section from this picture</option>' +
+      '<option value="feature">Featured item</option>';
     Array.prototype.forEach.call($('cardList').children, function (box, i) {
-      var h = (box.querySelector('.h').value || ('Section ' + (i + 1))).replace(/[<>&]/g, '');
-      opts += '<option value="' + i + '">' + h + '</option>';
+      var h = box.querySelector('.h').value || ('Section ' + (i + 1));
+      opts += '<option value="' + i + '">' + esc(h) + '</option>';
     });
     var html = '<div class="picfound"><h3>' + images.length + ' picture' +
       (images.length === 1 ? '' : 's') + ' found in the PDF</h3>' +
       '<p>The importer reads text, so anything printed as a picture is not in the sections above. ' +
-      'Choose where each one belongs. Most artwork carries its title inside the ' +
-      'picture rather than above it, so only some can be named from the text.' +
+      'Most of the time a picture like this <em>is</em> a section the importer ' +
+      'could not read, so it has nothing above to attach to: choose ' +
+      '<strong>New section from this picture</strong> and type the wording off ' +
+      'the picture. Only some can be named from the text, because the title is ' +
+      'usually inside the artwork rather than above it.' +
       (images.furniture ? ' The church logo and ' + (images.furniture - 1 === 1 ? 'the QR code were' :
         (images.furniture - 1) + ' QR codes were') + ' left out automatically.' : '') +
       '</p><div class="picgrid">';
     images.forEach(function (im, i) {
       var label = im.caption || 'Not named in the text';
-      html += '<div class="pic"><img src="' + im.url + '" alt="' + label.replace(/[<>&"]/g, '') + '">' +
-              '<strong' + (im.caption ? '' : ' class="unnamed"') + '>' + label.replace(/[<>&]/g, '') + '</strong>' +
+      html += '<div class="pic"><img src="' + im.url + '" alt="' + esc(label) + '">' +
+              '<strong' + (im.caption ? '' : ' class="unnamed"') + '>' + esc(label) + '</strong>' +
               '<small>' + im.w + ' by ' + im.h + ', page ' + im.page + '</small>' +
               '<select data-pic="' + i + '">' + opts + '</select></div>';
     });
@@ -567,14 +576,40 @@
     });
     if (!picks.length) { note($('attachNote'), 'Nothing chosen yet.', 'bad'); return; }
     if (!$('issueMonth').value) { note($('attachNote'), 'Choose the month first, then attach.', 'bad'); return; }
+    var clash = null;
+    var takenBy = {};
+    picks.forEach(function (pick) {
+      if (pick.to === 'new') return;              // each of these makes its own
+      if (takenBy[pick.to]) clash = pick.to;
+      takenBy[pick.to] = true;
+    });
+    if (clash !== null) {
+      var where = clash === 'feature' ? 'the featured item'
+        : ($('cardList').children[Number(clash)].querySelector('.h').value || 'that section');
+      note($('attachNote'), 'Two pictures are both going to ' + where +
+        ', which can only hold one. Send one of them to a new section instead, ' +
+        'or combine them into a single picture first.', 'bad');
+      return;
+    }
     note($('attachNote'), 'Uploading ' + picks.length + '...');
     var done = 0;
+    var made = 0;
     picks.reduce(function (chain, pick) {
       return chain.then(function () {
         var file = new File([pick.im.blob], 'pdf-picture-' + (done + 1) + '.png', { type: 'image/png' });
-        var slot = pick.to === 'feature' ? null : 'sec' + (Number(pick.to) + 1);
+        var target = pick.to;
+        // A new section has to exist before the upload, so the slot name matches
+        // the position the renderer will read it back from.
+        if (target === 'new') {
+          var fresh = cardEditor({ heading: pick.im.caption || '' });
+          $('cardList').appendChild(fresh);
+          fresh.classList.add('needs-text');
+          target = String($('cardList').children.length - 1);
+          made++;
+        }
+        var slot = target === 'feature' ? null : 'sec' + (Number(target) + 1);
         return upload(file, 'image', slot).then(function (r) {
-          if (pick.to === 'feature') {
+          if (target === 'feature') {
             state.featureImageKey = r.key;
             var fp = $('featPreview');
             if (fp) {
@@ -582,22 +617,29 @@
               fp.hidden = false;
             }
           } else {
-            var box = $('cardList').children[Number(pick.to)];
+            var box = $('cardList').children[Number(target)];
             if (box) {
               box.dataset.image = r.key;
               // The renderer needs real dimensions to keep the columns level.
               box.dataset.imageW = pick.im.w;
               box.dataset.imageH = pick.im.h;
               var pv = box.querySelector('.ipreview');
-              pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
-              pv.hidden = false;
+              if (pv) {
+                pv.src = '/api/admin/file/' + encodeURIComponent(r.key) + '#' + Date.now();
+                pv.hidden = false;
+              }
             }
           }
           done++;
         });
       });
     }, Promise.resolve()).then(function () {
-      note($('attachNote'), 'Attached ' + done + '. Check the preview below.', 'ok');
+      var msg = 'Attached ' + done + '.';
+      if (made) {
+        msg += ' ' + made + ' new section' + (made === 1 ? '' : 's') +
+               ' added at the bottom, marked in red. Type the heading and wording off each picture.';
+      }
+      note($('attachNote'), msg + ' Check the preview below.', 'ok');
       markDirty();
       schedulePreview();
     }).catch(function (e) {
