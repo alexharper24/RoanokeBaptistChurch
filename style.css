@@ -280,6 +280,7 @@ a { color: inherit; }
 .footer-grid a { color: #cfcfcf; text-decoration: none; cursor: pointer; }
 .footer-grid a:hover { color: var(--gold); }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 20px; text-align: center; font-size: 0.85rem; color: #909090; }
+.footer-col-toggle { display: none; }
 
 /* Page banner (interior pages) */
 /* The band itself is already edge to edge; this is the text block inside it,
@@ -536,6 +537,51 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
   .section { padding: 34px 0; }
   .pastor-photo { max-width: 360px; margin: 0 auto; }
   .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+
+  /* Footer column folds on a phone (2026-09-14).
+     At 390px the footer ran 912px. Explore folds behind its own heading, which
+     brings it to about 725px.
+
+     ONLY Explore folds. Service Times ends with the church phone number and the
+     bottom bar carries the street address but not the number, so folding that
+     column would put the phone behind a tap. The 24px grid gap is kept rather
+     than zeroed, because one folded row between two open blocks is a divider,
+     not a list; zero the gap only if Service Times ever folds too.
+
+     Scoped to .footer-accordion-ready, a class main.js adds at run time, so a
+     footer whose script never loaded renders exactly as it did before. Closed
+     panels set visibility:hidden as well as a zero grid row: the zero row
+     collapses the height, visibility is what takes the links out of the tab
+     order and out of the way of taps. */
+  .footer-accordion-ready .footer-col h3 { margin-bottom: 0; }
+  .footer-accordion-ready .footer-col-label { display: none; }
+  .footer-accordion-ready .footer-col-toggle {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    width: 100%; min-height: 48px; padding: 10px 0;
+    background: none; border: 0;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font-family: inherit; font-size: 1.1rem; font-weight: 700;
+    text-align: left; cursor: pointer;
+  }
+  .footer-accordion-ready .footer-col-toggle svg {
+    flex: 0 0 auto; transition: transform 0.24s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  .footer-accordion-ready .footer-col.open .footer-col-toggle svg { transform: rotate(180deg); }
+  .footer-accordion-ready .footer-col.open .footer-col-toggle { border-bottom-color: transparent; }
+  .footer-accordion-ready .footer-col-panel {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  .footer-accordion-ready .footer-col-panel > div {
+    overflow: hidden; min-height: 0;
+    visibility: hidden; transition: visibility 0.32s step-end;
+  }
+  .footer-accordion-ready .footer-col.open .footer-col-panel { grid-template-rows: 1fr; }
+  .footer-accordion-ready .footer-col.open .footer-col-panel > div {
+    visibility: visible; transition: visibility 0s;
+  }
+  .footer-accordion-ready .footer-col-panel li:first-child { margin-top: 12px; }
 }
 
 @media (max-width: 560px) {
@@ -606,3 +652,9 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
   background:#1f1d1b;color:#fff;font-weight:600;font-size:15px;
   padding:12px 20px;border-radius:0 0 10px 0;text-decoration:none}
 .skip-link:focus{left:0}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .footer-accordion-ready .footer-col-panel,
+  .footer-accordion-ready .footer-col-panel > div,
+  .footer-accordion-ready .footer-col-toggle svg { transition: none; }
+}

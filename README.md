@@ -115,6 +115,24 @@ fails.
 not loaded. It already appears inside the logo artwork, which is how it
 reaches the page.
 
+## The footer folds on a phone
+
+At 390px wide the footer measured 912px, more than a screenful. Below 900px, where the
+footer grid already drops to one column, **Explore** folds behind its own heading and the
+footer is 726px. Desktop is unchanged at 384px.
+
+**Only Explore folds, on purpose.** Service Times ends with the church phone number, and
+the bottom bar carries the street address but not the number, so folding that column
+would put the phone behind a tap. If the number is ever moved down beside the address,
+add `class="footer-col"` to the Service Times `<div>` in the six pages and it folds too,
+taking the footer to roughly 570px. Nothing else has to change.
+
+The button, its chevron and the panel are built by `main.js` from the heading and list
+already in the markup, so the pages carry only `class="footer-col"`. That keeps the
+heading text written once, and it means a footer whose script never loaded still shows
+every link under a plain heading rather than hiding them behind a control that cannot
+open them.
+
 ## A couple of honest notes
 
 - The **Give** button opens a simple on-page note with the Zelle address. A static site can't process payments directly; if you want a real online-giving button later, link out to a provider.
