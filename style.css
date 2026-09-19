@@ -98,8 +98,6 @@ a { color: inherit; }
    even though the white label on it is a clean 10:1. A white border restores
    the boundary at about 19:1 and pairs it with the solid white button beside
    it. Scoped to the hero: the same button on a light ground needs nothing. */
-.hero .btn-primary { border-color: #fff; }
-.hero .btn-primary:hover { border-color: #fff; }
 
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 100; background: var(--white); box-shadow: 0 1px 8px rgba(0,0,0,0.08); }
@@ -154,10 +152,10 @@ a { color: inherit; }
 .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
 /* Service strip */
-.service-strip { background: var(--brand); color: #fff; padding: 18px 0; }
+.service-strip { background: var(--navy); color: #fff; padding: 18px 0; }
 .service-strip .container { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; text-align: center; }
 .service-strip .svc { display: flex; flex-direction: column; padding: 4px 18px; }
-.service-strip .svc .lbl { color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.service-strip .svc .lbl { color: var(--gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .service-strip .svc .time { font-weight: 600; font-size: 1.05rem; }
 .service-strip .divider { width: 1px; height: 34px; background: rgba(255,255,255,0.25); }
 
@@ -598,8 +596,7 @@ details.sof-item[open] > .belief-head::after { transform: translateY(2px) rotate
   .section-alt { background-color: var(--cream) !important; }
   .belief-section, .visit-box, .event-item, .staff-card, .min-card, .modal-box, .photo-frame, .sof-item { background-color: #ffffff !important; }
   .site-header { background-color: #ffffff !important; }
-  .focus-banner .focus-text, .page-banner, .day-badge, .icon-square, .gospel-cta, .mobile-nav, .sof-head { background-color: var(--navy) !important; }
-  .service-strip { background-color: var(--brand) !important; }
+  .service-strip, .focus-banner .focus-text, .page-banner, .day-badge, .icon-square, .gospel-cta, .mobile-nav, .sof-head { background-color: var(--navy) !important; }
   .nav-cta { background-color: var(--brand) !important; }
   .icon-square.red { background-color: var(--brand-bright) !important; }
   .icon-square.gray { background-color: #5a5a5a !important; }
