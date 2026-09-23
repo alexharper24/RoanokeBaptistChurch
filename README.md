@@ -37,6 +37,8 @@ Upload **everything in this folder** (including the `img` folder and the files t
 
 **Remove `noindex` at cutover.** Since 2026-09-22 every page carries `<meta name="robots" content="noindex">`, so the review copy is not indexed while GoDaddy still serves roanokebaptistonline.com. Take it off every page when DNS moves, or the new site will never appear in search.
 
+**Legacy GoDaddy URLs.** `_redirects` sends `/about-us` to `our-church.html` and `/sermons` to the homepage (added 2026-09-22). Cloudflare applies it and GitHub Pages ignores it, which is fine because the site cuts over on Cloudflare. The old site had a page of sermon downloads and the new one has no sermons page, so that redirect is a stopgap until one exists.
+
 Every page's address tags (canonical, social-share, sitemap, structured data) are set to **https://roanokebaptistonline.com**. If you host it on a different domain, tell me and I'll update those URLs, or do a find-and-replace for `roanokebaptistonline.com` across `index.html`, the other `.html` files, `sitemap.xml`, and `robots.txt`. The links between pages are relative, so they work no matter the domain.
 
 ## Put it online with GitHub Pages (free)

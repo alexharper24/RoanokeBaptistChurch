@@ -1,0 +1,11 @@
+# Legacy URLs from the GoDaddy site at roanokebaptistonline.com, so saved links and old
+# search results still land after the cutover. Cloudflare applies this file and GitHub
+# Pages ignores it, which is fine because the site cuts over on Cloudflare (decided
+# 2026-09-22). The old sitemap listed four URLs and / and /ministries still exist.
+#
+# /sermons was a page of sermon downloads and the new site has no sermons page, so it
+# lands on the homepage until one exists.
+/about-us    /our-church.html  301
+/about-us/   /our-church.html  301
+/sermons     /                 301
+/sermons/    /                 301
