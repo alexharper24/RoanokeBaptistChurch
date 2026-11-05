@@ -9,7 +9,8 @@ index.html         Home
 our-church.html    Our Church (pastor, staff, and Life at Roanoke)
 beliefs.html       What We Believe (Statement of Faith)
 gospel.html        The Gospel
-ministries.html    Ministries
+ministries.html    Ministries (kids, teens, college and career, North of 62, Christian school)
+outreach.html      Outreach (bus ministry and missions)
 torch.html         The Torch (newsletter)
 404.html           Friendly "page not found" page
 style.css          All styling (shared by every page)
@@ -140,9 +141,9 @@ open them.
 ## A couple of honest notes
 
 - The **Give** button opens a simple on-page note with the Zelle address. A static site can't process payments directly; if you want a real online-giving button later, link out to a provider.
-- Three ministry cards (Children, Wednesday Kids' Clubs, Ladies' Fellowship) and the Missions card use an icon instead of a photo, and the Bus Ministry card currently shows a family portrait rather than a bus. Send real photos and I'll drop them in.
+- **Photos tabled until after the new year (2026-11-05).** The church added a new photo for each ministry (`img/kids.jpg`, `teens.jpg`, `college and career.jpg`, `north of 62.jpg`, `school.png`, `bus.jpg`, `missions.jpg`). They are not in use yet, and `.assetsignore` keeps them off the website until they are (delete its seven `img/` lines then). College and Career and North of 62 have no earlier photo, so those two cards show an icon where a photo goes (marked `PHOTO PENDING` in `ministries.html`). When the photos go in, rename them lowercase with hyphens and resize them to the 1200px web width.
 - The welcome/building photo is low-resolution; a higher-resolution original would sharpen it.
-- The choir photo leads the "Life At Roanoke Baptist" gallery on **Our Church**, and the "Boldly Go!" flag display anchors a missions banner at the bottom of **Ministries**. Full-size originals are kept in `img/archive/`; the web copies in `img/` are resized to 1200px wide.
+- The choir photo leads the "Life At Roanoke Baptist" gallery on **Our Church**, and the "Boldly Go!" flag display anchors a missions banner at the bottom of **Outreach**. Full-size originals are kept in `img/archive/`; the web copies in `img/` are resized to 1200px wide.
 - The Torch page now shows **August 2026**, transcribed from the printed PDF, minus the birthdays and anniversaries. Two graphics were lifted out of that PDF (`img/torch-2026-08-*.jpg`); the rest of its images are clip art and were left behind.
 - **Still to do before the editor is usable:** sign in with wrangler, run `npm run setup`, then create the Cloudflare Access application and fill in `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.jsonc`. See "The Torch editor" below.
 - **Not yet decided:** the September 5 Steele/Bachman wedding was in the printed August issue but is left off the website, since it names private individuals on a page anyone can read. Add it back if the church would rather it were public.

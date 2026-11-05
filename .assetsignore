@@ -52,3 +52,15 @@ img/archive/
 .gitattributes
 .assetsignore
 .editorconfig
+
+# Ministry photos the church added on 2026-11-05 and then tabled until after the
+# new year. The worker serves this whole folder, so an unused file in img/ is public
+# the moment it is deployed. Delete these seven lines when the photos go onto the
+# Ministries and Outreach cards (README: "Photos tabled until after the new year").
+img/kids.jpg
+img/teens.jpg
+img/bus.jpg
+img/missions.jpg
+img/school.png
+img/north of 62.jpg
+img/college and career.jpg
